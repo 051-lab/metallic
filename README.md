@@ -23,10 +23,38 @@
 
 ```
 metallic/
-├── extensions/        # Individual Chrome extension projects
-├── shared/            # Shared utilities, helpers, and components
+├── extensions/
+│   ├── gemini-utilities/
+│   └── localhost-dashboard/
+├── shared/            # Reusable utilities and components
 ├── templates/         # Starter templates for new extensions
 └── README.md
+```
+
+---
+
+## 🔌 Extensions
+
+### Gemini Utilities
+
+Adds export and archive tools to Gemini, including Markdown downloads,
+clipboard export, local conversation archives, and Jupyter Notebook export.
+
+Load unpacked from:
+
+```text
+extensions/gemini-utilities
+```
+
+### Localhost Dashboard
+
+Provides a developer dashboard for monitoring and navigating locally running
+servers.
+
+Load unpacked from:
+
+```text
+extensions/localhost-dashboard
 ```
 
 ---
@@ -53,7 +81,7 @@ cd metallic
 1. Open Chrome and navigate to `chrome://extensions`
 2. Enable **Developer mode** (toggle in top-right)
 3. Click **Load unpacked**
-4. Select your extension folder inside `extensions/`
+4. Select one of the extension folders inside `extensions/`
 
 ---
 
