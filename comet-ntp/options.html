@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
+    <title>comet-ntp settings</title>
+    <link rel="stylesheet" href="options.css">
+  </head>
+  <body>
+    <main class="settings-page">
+      <header class="settings-header">
+        <div>
+          <p class="eyebrow">COMET // CONFIGURATION</p>
+          <h1>New tab settings</h1>
+          <p>Shape the dashboard, search flow, and launch grid.</p>
+        </div>
+        <a class="preview-link" href="newtab.html">Preview dashboard</a>
+      </header>
+
+      <form id="settingsForm">
+        <section class="settings-section">
+          <div class="section-copy">
+            <span>01</span>
+            <div>
+              <h2>Your name</h2>
+              <p>Used in the time-aware greeting.</p>
+            </div>
+          </div>
+          <div class="section-control">
+            <label for="userName">Display name</label>
+            <input id="userName" type="text" maxlength="40" placeholder="friend">
+          </div>
+        </section>
+
+        <section class="settings-section">
+          <div class="section-copy">
+            <span>02</span>
+            <div>
+              <h2>Default search engine</h2>
+              <p>Choose where searches leave orbit.</p>
+            </div>
+          </div>
+          <div class="section-control">
+            <label for="defaultEngine">Search engine</label>
+            <select id="defaultEngine">
+              <option value="google">Google</option>
+              <option value="bing">Bing</option>
+              <option value="duckduckgo">DuckDuckGo</option>
+              <option value="brave">Brave</option>
+              <option value="perplexity">Perplexity</option>
+            </select>
+          </div>
+        </section>
+
+        <section class="settings-section links-settings">
+          <div class="section-copy">
+            <span>03</span>
+            <div>
+              <h2>Quick links</h2>
+              <p>Drag entries to reorder the launch grid.</p>
+            </div>
+          </div>
+          <div class="section-control">
+            <div id="quickLinksList" class="links-list"></div>
+            <button id="showAddLink" class="secondary-button" type="button">Add link</button>
+            <div id="addLinkForm" class="add-link-form" hidden>
+              <label for="linkLabel">Label</label>
+              <input id="linkLabel" type="text" maxlength="40" placeholder="GitHub">
+              <label for="linkUrl">URL</label>
+              <input id="linkUrl" type="url" placeholder="https://github.com/">
+              <div class="inline-actions">
+                <button id="confirmAddLink" type="button">Add</button>
+                <button id="cancelAddLink" class="text-button" type="button">Cancel</button>
+              </div>
+              <p id="linkError" class="field-error" role="alert"></p>
+            </div>
+          </div>
+        </section>
+
+        <section class="settings-section">
+          <div class="section-copy">
+            <span>04</span>
+            <div>
+              <h2>Mode</h2>
+              <p>Use the built-in dashboard or redirect elsewhere.</p>
+            </div>
+          </div>
+          <fieldset class="section-control choice-group">
+            <legend>New tab destination</legend>
+            <label class="choice">
+              <input type="radio" name="mode" value="dashboard" checked>
+              <span>
+                <strong>Built-in dashboard</strong>
+                <small>Clock, search, and quick links.</small>
+              </span>
+            </label>
+            <label class="choice">
+              <input type="radio" name="mode" value="custom">
+              <span>
+                <strong>Redirect to custom URL</strong>
+                <small>Send new tabs directly to another page.</small>
+              </span>
+            </label>
+            <div id="customUrlGroup" class="conditional-field" hidden>
+              <label for="customUrl">Custom URL</label>
+              <input id="customUrl" type="url" placeholder="https://example.com/">
+            </div>
+          </fieldset>
+        </section>
+
+        <section class="settings-section">
+          <div class="section-copy">
+            <span>05</span>
+            <div>
+              <h2>Background</h2>
+              <p>Set the atmosphere behind the dashboard.</p>
+            </div>
+          </div>
+          <fieldset class="section-control background-options">
+            <legend>Background style</legend>
+
+            <label class="choice">
+              <input type="radio" name="backgroundType" value="default" checked>
+              <span><strong>Default dark</strong><small>Black metal with steel-blue light.</small></span>
+            </label>
+
+            <label class="choice">
+              <input type="radio" name="backgroundType" value="color">
+              <span><strong>Custom color</strong><small>A single solid tone.</small></span>
+            </label>
+            <div id="colorControls" class="conditional-field" hidden>
+              <label for="backgroundColor">Color</label>
+              <input id="backgroundColor" type="color" value="#0d0d0f">
+            </div>
+
+            <label class="choice">
+              <input type="radio" name="backgroundType" value="gradient">
+              <span><strong>Gradient</strong><small>Blend two colors across the viewport.</small></span>
+            </label>
+            <div id="gradientControls" class="conditional-field split-controls" hidden>
+              <label for="gradientFrom">From</label>
+              <input id="gradientFrom" type="color" value="#0d0d0f">
+              <label for="gradientTo">To</label>
+              <input id="gradientTo" type="color" value="#17243a">
+              <label for="gradientDirection">Direction</label>
+              <select id="gradientDirection">
+                <option value="135deg">Diagonal</option>
+                <option value="180deg">Top to bottom</option>
+                <option value="90deg">Left to right</option>
+                <option value="45deg">Lower-left to upper-right</option>
+              </select>
+            </div>
+
+            <label class="choice">
+              <input type="radio" name="backgroundType" value="image">
+              <span><strong>Image URL</strong><small>Use a remote image with a dark overlay.</small></span>
+            </label>
+            <div id="imageControls" class="conditional-field" hidden>
+              <label for="backgroundImageUrl">Image URL</label>
+              <input id="backgroundImageUrl" type="url" placeholder="https://images.example.com/space.jpg">
+            </div>
+          </fieldset>
+        </section>
+
+        <div class="save-bar">
+          <p>Settings sync across browsers signed into this profile.</p>
+          <button class="save-button" type="submit">Save settings</button>
+        </div>
+      </form>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite">Saved!</div>
+    <script src="options.js"></script>
+  </body>
+</html>

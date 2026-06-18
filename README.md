@@ -23,6 +23,7 @@
 
 ```
 metallic/
+├── comet-ntp/         # Comet custom new-tab bypass and dashboard
 ├── extensions/
 │   ├── gemini-utilities/
 │   └── localhost-dashboard/
@@ -34,6 +35,17 @@ metallic/
 ---
 
 ## 🔌 Extensions
+
+### comet-ntp
+
+Provides a custom new tab dashboard for the Comet browser using manifest,
+navigation, and network redirect layers.
+
+Load unpacked from:
+
+```text
+comet-ntp
+```
 
 ### Gemini Utilities
 

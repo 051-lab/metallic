@@ -1,0 +1,56 @@
+{
+  "manifest_version": 3,
+  "name": "comet-ntp",
+  "version": "1.0.0",
+  "description": "Custom new tab page for the Comet browser by Perplexity. Bypasses the locked NTP with a personal dashboard.",
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "permissions": [
+    "tabs",
+    "storage",
+    "webNavigation",
+    "declarativeNetRequest",
+    "declarativeNetRequestWithHostAccess"
+  ],
+  "host_permissions": [
+    "*://www.perplexity.ai/*"
+  ],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "ruleset1",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "newtab.html",
+        "newtab.css",
+        "newtab.js"
+      ],
+      "matches": [
+        "*://www.perplexity.ai/*"
+      ]
+    }
+  ],
+  "icons": {
+    "16": "assets/icons/icon16.png",
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
+  },
+  "action": {
+    "default_title": "Open comet-ntp",
+    "default_icon": "assets/icons/icon48.png"
+  }
+}

@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "extensionPath": "/newtab.html"
+      }
+    },
+    "condition": {
+      "urlFilter": "|https://www.perplexity.ai/|",
+      "resourceTypes": [
+        "main_frame"
+      ]
+    }
+  }
+]

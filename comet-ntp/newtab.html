@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
+    <title>comet-ntp</title>
+    <link rel="stylesheet" href="newtab.css">
+  </head>
+  <body>
+    <div class="ambient ambient-one" aria-hidden="true"></div>
+    <div class="ambient ambient-two" aria-hidden="true"></div>
+
+    <main class="dashboard">
+      <header class="time-panel">
+        <p class="eyebrow">COMET // PERSONAL ORBIT</p>
+        <time id="clock" class="clock" aria-live="off">00:00</time>
+        <p id="date" class="date">Thursday, June 18</p>
+        <h1 id="greeting" class="greeting shimmer">Good evening, friend</h1>
+      </header>
+
+      <form id="searchForm" class="search-shell" role="search">
+        <label class="sr-only" for="searchInput">Search the web</label>
+        <select id="engineSelect" class="engine-select" aria-label="Search engine">
+          <option value="google">◉ Google</option>
+          <option value="bing">◈ Bing</option>
+          <option value="duckduckgo">◆ DuckDuckGo</option>
+          <option value="brave">▲ Brave</option>
+          <option value="perplexity">✦ Perplexity</option>
+        </select>
+        <span class="search-divider" aria-hidden="true"></span>
+        <input
+          id="searchInput"
+          type="search"
+          placeholder="Search beyond the horizon"
+          autocomplete="off"
+          spellcheck="false"
+          autofocus
+        >
+        <button class="search-button" type="submit" aria-label="Search">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="6.5"></circle>
+            <path d="m16 16 4 4"></path>
+          </svg>
+        </button>
+      </form>
+
+      <section class="links-section" aria-labelledby="linksHeading">
+        <div class="section-heading">
+          <h2 id="linksHeading">Quick launch</h2>
+          <span id="linkCount" class="link-count"></span>
+        </div>
+        <div id="quickLinks" class="quick-links"></div>
+      </section>
+    </main>
+
+    <a id="settingsLink" class="settings-link" href="options.html" aria-label="Open comet-ntp settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"></path>
+        <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.86 2.86-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.09A1.7 1.7 0 0 0 8.5 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.86-2.86.06-.06A1.7 1.7 0 0 0 4.1 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H2v-4h.4A1.7 1.7 0 0 0 4.1 8a1.7 1.7 0 0 0-.34-1.88l-.06-.06L6.56 3.2l.06.06A1.7 1.7 0 0 0 8.5 3.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V2h4v.09A1.7 1.7 0 0 0 15 3.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.86 2.86-.06.06A1.7 1.7 0 0 0 19.4 8c.4.25.75.6 1 1 .25.4.38.86.4 1.3v.3H22v4h-1.2v.1c-.02.44-.15.9-.4 1.3Z"></path>
+      </svg>
+    </a>
+
+    <script src="newtab.js"></script>
+  </body>
+</html>
