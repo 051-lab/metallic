@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Localhost Dashboard</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="header">
+    <div class="header-left">
+      <span class="logo">💻</span>
+      <span class="title">Localhost Dashboard</span>
+    </div>
+    <div class="header-right">
+      <button class="icon-btn" id="refreshBtn" title="Refresh scan">↻</button>
+      <button class="icon-btn" id="settingsBtn" title="Settings">⚙</button>
+    </div>
+  </div>
+  <div id="loading" class="loading-state">Scanning ports...</div>
+  <div id="serverList" class="server-list"></div>
+  <div id="emptyState" class="empty-state hidden">
+    <p>No servers detected.</p>
+    <p>Start a local server or add one manually.</p>
+  </div>
+  <div class="footer">
+    <button class="btn btn-primary" id="addServerBtn">+ Add Server</button>
+    <span class="scan-time" id="lastScanTime"></span>
+  </div>
+  <div id="modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Add Server</h2>
+      <form id="addForm">
+        <label>Name<input type="text" id="serverName" placeholder="e.g. React App" required></label>
+        <label>Port<input type="number" id="serverPort" placeholder="e.g. 3000" min="1" max="65535" required></label>
+        <label>Protocol
+          <select id="serverProtocol">
+            <option value="http">http</option>
+            <option value="https">https</option>
+          </select>
+        </label>
+        <div class="modal-actions">
+          <button type="button" class="btn" id="cancelBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <script src="popup.js" type="module"></script>
+</body>
+</html>
