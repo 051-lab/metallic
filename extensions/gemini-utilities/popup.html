@@ -1,118 +1,32 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Gemini Archive</title>
-  <style>
-    body {
-      width: 350px;
-      min-height: 400px;
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #202124;
-      color: #e8eaed;
-      display: flex;
-      flex-direction: column;
-    }
-    header {
-      padding: 16px;
-      background-color: #303134;
-      border-bottom: 1px solid #5f6368;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    h2 {
-      margin: 0;
-      font-size: 18px;
-      font-weight: 500;
-    }
-    .start-btn {
-      background-color: #8ab4f8;
-      color: #202124;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .search-container {
-      padding: 12px 16px;
-    }
-    #searchInput {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 8px 12px;
-      background-color: #303134;
-      border: 1px solid #5f6368;
-      border-radius: 20px;
-      color: #e8eaed;
-      outline: none;
-    }
-    #searchInput:focus {
-      border-color: #8ab4f8;
-    }
-    #archiveList {
-      flex: 1;
-      overflow-y: auto;
-      padding: 0 16px 16px;
-      list-style: none;
-      margin: 0;
-    }
-    .archive-item {
-      background-color: #303134;
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 8px;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-    .archive-item:hover {
-      background-color: #3c4043;
-    }
-    .archive-title {
-      font-size: 14px;
-      font-weight: 500;
-      margin-bottom: 4px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .notebook-badge {
-      display: inline-block;
-      margin-left: 8px;
-      padding: 2px 6px;
-      background-color: #3f4e4f;
-      color: #8ab4f8;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: 600;
-      vertical-align: middle;
-    }
-    .archive-date {
-      font-size: 12px;
-      color: #9aa0a6;
-    }
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      color: #9aa0a6;
-      font-size: 14px;
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <h2>Gemini Archive</h2>
-    <button id="myButton" class="start-btn">Start Tool</button>
-  </header>
-  <div class="search-container">
-    <input type="text" id="searchInput" placeholder="Search past conversations...">
-  </div>
-  <ul id="archiveList">
-    <!-- Items will be injected here -->
-  </ul>
-  <script src="storage.js"></script>
-  <script src="popup.js"></script>
-</body>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat Utilities</title>
+    <link rel="stylesheet" href="ui.css">
+  </head>
+  <body class="popup-page">
+    <header class="popup-header">
+      <div>
+        <p class="eyebrow">ACTIVE PAGE</p>
+        <h1 id="siteName">Detecting…</h1>
+        <p id="siteStatus">Checking platform access.</p>
+      </div>
+      <button id="settingsButton" class="icon-button" title="Settings" aria-label="Settings">⚙</button>
+    </header>
+    <button id="captureButton" class="primary-button">Open utilities</button>
+    <button id="alwaysEnableButton" class="secondary-button" hidden>Always enable on this site</button>
+    <section class="archive-section">
+      <div class="section-title"><h2>Local archive</h2></div>
+      <div class="filters">
+        <input id="searchInput" type="search" placeholder="Search conversations">
+        <select id="platformFilter" aria-label="Filter by platform">
+          <option value="">All platforms</option>
+        </select>
+      </div>
+      <div id="archiveList" class="archive-list"></div>
+    </section>
+    <script src="dist/popup.js"></script>
+  </body>
 </html>

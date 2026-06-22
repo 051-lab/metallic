@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat Utilities settings</title>
+    <link rel="stylesheet" href="ui.css">
+  </head>
+  <body>
+    <main class="settings-page">
+      <header class="page-header">
+        <p class="eyebrow">AI CHAT UTILITIES // V2.1</p>
+        <h1>Compatibility control</h1>
+        <p>Manage dedicated adapters, exact-origin launcher access, and locally learned site profiles.</p>
+      </header>
+      <section>
+        <div id="platformList" class="platform-list"></div>
+      </section>
+      <section class="settings-section">
+        <div class="section-heading">
+          <div><p class="eyebrow">EXACT-ORIGIN ACCESS</p><h2>Persistent sites</h2></div>
+          <p>Sites enabled from the popup appear here. Removing one revokes its browser permission.</p>
+        </div>
+        <div id="persistentSiteList" class="management-list"></div>
+      </section>
+      <section class="settings-section">
+        <div class="section-heading profile-heading">
+          <div><p class="eyebrow">LOCAL CALIBRATION</p><h2>Learned profiles</h2></div>
+          <div class="inline-actions">
+            <button id="importProfiles" type="button">Import JSON</button>
+            <button id="exportProfiles" type="button">Export JSON</button>
+            <input id="profileFile" type="file" accept="application/json,.json" hidden>
+          </div>
+        </div>
+        <p class="section-copy">Profiles contain selectors and site metadata only—never conversation content or executable code.</p>
+        <div id="profileList" class="management-list"></div>
+      </section>
+      <section class="privacy-note">
+        <h2>Launcher and exports</h2>
+        <form id="preferenceForm" class="preference-form">
+          <label class="check-row"><input id="launcherEnabled" type="checkbox"><span>Show the floating launcher on enabled sites</span></label>
+          <label>Launcher position
+            <select id="launcherPosition">
+              <option value="bottom-right">Bottom right</option>
+              <option value="bottom-left">Bottom left</option>
+            </select>
+          </label>
+          <label>Filename template
+            <input id="filenameTemplate" type="text" value="{platform}-{title}">
+          </label>
+          <button class="primary-button" type="submit">Save preferences</button>
+        </form>
+      </section>
+      <section class="privacy-note">
+        <h2>Local by design</h2>
+        <p>Conversation content, semantic analysis, calibration, profiles, and archives remain inside your browser. No telemetry or conversation data is transmitted.</p>
+      </section>
+    </main>
+    <div id="toast" class="toast" role="status"></div>
+    <script src="dist/options.js"></script>
+  </body>
+</html>

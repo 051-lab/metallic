@@ -1,10 +1,11 @@
 {
   "manifest_version": 3,
-  "name": "Gemini Utilities",
-  "version": "1.1",
-  "description": "This extension converts Gemini content to Markdown format and downloads your chat history.",
+  "name": "AI Chat Utilities",
+  "version": "2.1.0",
+  "description": "Capture, export, and archive conversations from Gemini, ChatGPT, Claude, Qwen, and other AI chatbots.",
   "action": {
     "default_popup": "popup.html",
+    "default_title": "AI Chat Utilities",
     "default_icon": {
       "16": "images/icon16.png",
       "48": "images/icon48.png",
@@ -17,14 +18,22 @@
     "128": "images/icon128.png"
   },
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "dist/background.js"
   },
-  "permissions": ["clipboardRead", "clipboardWrite", "downloads", "scripting", "activeTab", "storage", "unlimitedStorage"],
-  "host_permissions": ["https://gemini.google.com/*"],
-  "content_scripts": [
-    {
-      "matches": ["https://gemini.google.com/*"],
-      "js": ["turndown.min.js", "storage.js", "contentScript.js"]
-    }
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "permissions": [
+    "activeTab",
+    "clipboardWrite",
+    "downloads",
+    "scripting",
+    "storage",
+    "unlimitedStorage"
+  ],
+  "optional_host_permissions": [
+    "https://*/*",
+    "http://*/*"
   ]
 }

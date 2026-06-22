@@ -86,6 +86,11 @@ out
 dist
 .output
 
+# AI Chat Utilities tracks its deterministic unpacked-extension bundles.
+!extensions/gemini-utilities/dist/
+!extensions/gemini-utilities/dist/**
+extensions/gemini-utilities/release/
+
 # Gatsby files
 .cache/
 # Comment in the public line in if your project uses Gatsby and not Next.js
