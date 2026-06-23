@@ -59,5 +59,17 @@ export const BUNDLED_PROFILES: SiteProfile[] = [
   }),
   profile("mistral-vibe", "Mistral Vibe", "https://chat.mistral.ai"),
   profile("ai2-playground", "Ai2 Playground", "https://playground.allenai.org"),
-  profile("deepseek", "DeepSeek Chat", "https://chat.deepseek.com")
+  profile("deepseek", "DeepSeek Chat", "https://chat.deepseek.com", [".ds-message"], {
+    selectors: {
+      messages: [".ds-message"],
+      exclude: ["nav", "aside", "[role='navigation']", "[aria-hidden='true']"]
+    },
+    roles: {
+      strategy: "selectors",
+      userSelectors: [".ds-message"],
+      assistantSelectors: [".ds-assistant-message-main-content"],
+      startsWith: "user"
+    },
+    confidence: 0.95
+  })
 ];

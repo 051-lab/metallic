@@ -47,8 +47,15 @@ function roleFor(profile: SiteProfile, element: Element, index: number): Message
     }
   }
   if (roles.strategy === "selectors") {
-    if (roles.userSelectors?.some((selector) => element.matches(selector))) return "user";
-    if (roles.assistantSelectors?.some((selector) => element.matches(selector))) return "assistant";
+    const matches = (selector: string) => {
+      try {
+        return element.matches(selector) || Boolean(element.querySelector(selector));
+      } catch {
+        return false;
+      }
+    };
+    if (roles.assistantSelectors?.some(matches)) return "assistant";
+    if (roles.userSelectors?.some(matches)) return "user";
   }
   const inferred = roleFromElement(element);
   if (inferred !== "unknown") return inferred;

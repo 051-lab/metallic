@@ -105,6 +105,23 @@ describe("site profiles", () => {
     const mistralDraft = await createProfileAdapter(mistral!).extract(document);
     expect(mistralDraft.messages.map((message) => message.role)).toEqual(["user", "assistant"]);
   });
+
+  it("extracts the current DeepSeek live-DOM shape", async () => {
+    const deepseek = BUNDLED_PROFILES.find((profile) => profile.id === "deepseek")!;
+    document.body.innerHTML = `<section>
+      <div class="generated-user ds-message"><div>Hello</div></div>
+      <div class="ds-message">
+        <div class="ds-markdown ds-assistant-message-main-content">
+          <p>Hello! How can I help you today?</p>
+        </div>
+      </div>
+    </section>`;
+    const draft = await createProfileAdapter(deepseek).extract(document);
+    expect(draft.messages.map((message) => [message.role, message.plainText])).toEqual([
+      ["user", "Hello"],
+      ["assistant", "Hello! How can I help you today?"]
+    ]);
+  });
 });
 
 describe("semantic extraction", () => {
