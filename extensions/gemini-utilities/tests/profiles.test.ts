@@ -122,6 +122,27 @@ describe("site profiles", () => {
       ["assistant", "Hello! How can I help you today?"]
     ]);
   });
+
+  it("extracts the current Ai2 Playground live-DOM shape", async () => {
+    const ai2 = BUNDLED_PROFILES.find((profile) => profile.id === "ai2-playground")!;
+    document.body.innerHTML = `<main>
+      <div class="chat-message" data-messageid="msg-user">
+        <div class="MuiTypography-body1"><p>Hello</p></div>
+        <span aria-live="assertive" aria-label="Hello"></span>
+      </div>
+      <div class="chat-message" data-messageid="msg-assistant">
+        <div class="MuiTypography-body1" data-is-streaming="false">
+          <p>Hi there! How can I help you today?</p>
+        </div>
+        <button>Show OlmoTrace</button>
+      </div>
+    </main>`;
+    const draft = await createProfileAdapter(ai2).extract(document);
+    expect(draft.messages.map((message) => [message.role, message.plainText])).toEqual([
+      ["user", "Hello"],
+      ["assistant", "Hi there! How can I help you today?"]
+    ]);
+  });
 });
 
 describe("semantic extraction", () => {

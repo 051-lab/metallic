@@ -1029,7 +1029,23 @@
       confidence: 0.95
     }),
     profile("mistral-vibe", "Mistral Vibe", "https://chat.mistral.ai"),
-    profile("ai2-playground", "Ai2 Playground", "https://playground.allenai.org"),
+    profile("ai2-playground", "Ai2 Playground", "https://playground.allenai.org", [
+      ".chat-message[data-messageid]"
+    ], {
+      selectors: {
+        conversation: "main",
+        messages: [".chat-message[data-messageid]"],
+        content: ".MuiTypography-body1",
+        exclude: ["nav", "aside", "[role='navigation']", "[aria-hidden='true']"]
+      },
+      roles: {
+        strategy: "selectors",
+        userSelectors: [".chat-message[data-messageid]"],
+        assistantSelectors: ["[data-is-streaming]"],
+        startsWith: "user"
+      },
+      confidence: 0.95
+    }),
     profile("deepseek", "DeepSeek Chat", "https://chat.deepseek.com", [".ds-message"], {
       selectors: {
         messages: [".ds-message"],
