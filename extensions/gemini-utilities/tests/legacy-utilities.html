@@ -278,6 +278,16 @@
           }
         );
 
+        const jupyterOption = createUtilityOption(
+          "📓",
+          "Export as .ipynb",
+          "Extract code blocks to a Jupyter Notebook",
+          () => {
+            showToast("Jupyter Notebook export started!");
+            overlay.remove();
+          }
+        );
+
         const copyOption = createUtilityOption(
           "📋",
           "Copy as Markdown",
@@ -304,6 +314,16 @@
           }
         );
 
+        const archiveOption = createUtilityOption(
+          "🗄️",
+          "Save to Archive",
+          "Silently save conversation to local archive",
+          () => {
+            showToast("Conversation archived successfully!");
+            overlay.remove();
+          }
+        );
+
         const settingsOption = createUtilityOption(
           "⚙️",
           "Extension Settings",
@@ -315,8 +335,10 @@
         );
 
         utilitiesGrid.appendChild(downloadOption);
+        utilitiesGrid.appendChild(jupyterOption);
         utilitiesGrid.appendChild(copyOption);
         utilitiesGrid.appendChild(clearOption);
+        utilitiesGrid.appendChild(archiveOption);
         utilitiesGrid.appendChild(settingsOption);
 
         utilitiesCard.appendChild(header);

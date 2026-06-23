@@ -1,114 +1,65 @@
-# Gemini Utilities
+# AI Chat Utilities
 
-## Overview
+AI Chat Utilities is a local-first Manifest V3 extension for capturing,
+exporting, and archiving AI chatbot conversations.
 
-Gemini Utilities is a Manifest V3 Chrome extension for exporting and archiving
-conversations from `https://gemini.google.com/`.
+## Supported platforms
 
-## Problem Solved
-Previously, saving content from Gemini as a Markdown file involved a manual, multi-step process:
-1.  Manually selecting and copying content from Gemini.
-2.  Opening a text editor.
-3.  Pasting the copied content.
-4.  Manually cleaning up and formatting the content for Markdown (e.g., code blocks, lists).
-5.  Saving the file with a `.md` extension.
+- Gemini
+- ChatGPT
+- Claude
+- Qwen
+- Bundled profiles for Z.ai, Mistral Vibe, Ai2 Playground, and DeepSeek Chat,
+  validated against authenticated conversations
+- Local semantic detection and guided calibration for other web chatbots
 
-This repetitive workflow was time-consuming and prone to formatting errors. This extension was created to streamline this process into a few clicks, directly within the Gemini interface.
+## Features
 
-## Key Features
+- Platform-neutral Markdown export
+- Jupyter Notebook export with executable fenced-code cells
+- Clipboard export
+- IndexedDB conversation archive with platform and text search
+- Optional per-platform and exact-origin host permissions
+- Shadow DOM floating launcher on enabled platforms
+- Local compatibility profiles with JSON import/export and repair state
+- Open Shadow DOM and same-origin frame discovery
+- Legacy Gemini archive migration without deleting the original records
 
-*   **Direct HTML-to-Markdown Conversion**: Uses the bundled Turndown.js library to convert Gemini conversations into Markdown.
-*   **Jupyter Notebook Export**: Converts Markdown and fenced code blocks into a valid `.ipynb` notebook.
-*   **Local Conversation Archive**: Stores exported conversations in `chrome.storage.local` and provides searchable popup and full-page archive views.
-*   **Notebook Context Metadata**: Records a detected Gemini notebook name when the page exposes a reliable notebook identifier.
-*   **Integrated "Utilities" Menu**: A "Utilities" button is dynamically added to the Gemini UI, providing access to:
-    *   **⬇️ Download Markdown**: Extracts the current chat, converts it to Markdown, and prompts for a filename.
-    *   **📓 Export as .ipynb**: Creates a Jupyter Notebook with Markdown and executable code cells.
-    *   **📋 Copy as Markdown**: Converts the current conversation to Markdown and copies it directly to your clipboard, ready to paste into any application.
-    *   **🗄️ Save to Archive**: Stores the current conversation in the extension's local archive.
-    *   **🗑️ Clear Conversation**: Quickly starts a fresh chat session in Gemini (with a confirmation prompt).
-    *   **⚙️ Extension Settings**: Access a settings panel to customize filename formats and toggle auto-download behavior.
-*   **Automatic Copy Button Integration (Configurable)**: Optionally, the extension can detect clicks on Gemini's native "Copy" button to automatically trigger a download popup with the copied content, already converted to Markdown.
-*   **Smart Filename Generation**: Suggests filenames based on the conversation's H2 title (if available) or a timestamp format (e.g., `GeminiConversation_DDMMYYYY_HHMMAMPM.md`).
-*   **UI/UX**:
-    *   **Dark Theme Integration**: The extension's UI (popups, overlays) is styled to match Gemini's dark theme for a consistent look and feel.
-    *   **Toast Notifications**: Provides non-intrusive feedback for actions like "Copied to clipboard" or "File saved."
-*   **Robust and Modern**: Built using Manifest V3 standards. Includes retry mechanisms for UI element injection and graceful error handling.
+Text, citations, code, and attachment or artifact references are preserved.
+Binary files and interactive artifacts are not downloaded.
+
+## Development
+
+```bash
+npm install
+npm run check
+```
+
+The extension root remains directly loadable after `npm run build`:
+
+```text
+extensions/gemini-utilities
+```
+
+Authored TypeScript lives in `src/`; deterministic browser bundles are emitted
+to `dist/`. The v1 implementation is retained in `legacy/` for reference.
 
 ## Installation
 
-1.  **Download the Extension Files**:
-    *   Download or clone this repository to your local machine.
-    *   Clone the `metallic` repository.
-2.  **Open Chrome Extensions Page**:
-    *   Open Google Chrome.
-    *   Navigate to `chrome://extensions/` in the address bar.
-3.  **Enable Developer Mode**:
-    *   In the top-right corner of the Extensions page, find the "Developer mode" toggle and switch it **ON**.
-4.  **Load the Extension**:
-    *   Click the "Load unpacked" button (usually on the top-left).
-    *   Select `extensions/gemini-utilities`.
-5.  **Verify Installation**:
-    *   Gemini Utilities should now appear in your list of installed extensions.
-    *   Ensure it is enabled.
+1. Run `npm install && npm run build`.
+2. Open `chrome://extensions`.
+3. Enable Developer mode.
+4. Click **Load unpacked**.
+5. Select `extensions/gemini-utilities`.
+6. Open the extension settings and enable persistent access for the platforms
+   you use.
 
-## How to Use
+Unknown sites can be captured once with `activeTab`, or enabled persistently
+for one exact origin. Low-confidence pages launch a three-step calibration
+flow that learns message and role selectors without storing conversation text.
 
-Once installed, the extension primarily works on the `https://gemini.google.com/` website.
+## Privacy
 
-1.  **Navigate to Gemini**: Open a conversation on the Gemini platform.
-2.  **Accessing Utilities**: Look for the **"Utilities"** button, which should appear in the Gemini interface (typically near the "Canvas" or other toolbar buttons).
-    *   Clicking the "Utilities" button will open an overlay menu.
-3.  **Using the Utilities Menu**:
-    *   **Download Conversation**: Select this option to extract the current chat. The content will be converted to Markdown, and a popup will appear allowing you to confirm or change the filename before saving the `.md` file.
-    *   **Copy as Markdown**: Select this to convert the current chat to Markdown and copy it to your clipboard. A toast notification will confirm the action.
-    *   **Clear Conversation**: Click this to initiate a new chat in Gemini. A confirmation will be requested.
-    *   **Extension Settings**: Opens a dialog to configure preferences like default filename format and auto-download behavior (e.g., triggering download on native copy button click).
-
-## Troubleshooting
-
-*   **Extension Not Loading / Errors on Load**:
-    *   Ensure all files from the repository/ZIP are in the selected folder.
-    *   Verify `manifest.json` is valid (no syntax errors).
-    *   Make sure "Developer mode" is enabled on `chrome://extensions/`.
-    *   Try removing and re-adding the extension.
-*   **"Utilities" Button Missing**:
-    *   Refresh the Gemini page. The button is injected dynamically and might take a moment.
-    *   Wait 5-10 seconds for the script's retry mechanism.
-    *   Check the browser console (F12 -> Console) for any error messages related to the extension.
-    *   Ensure you are on an active `https://gemini.google.com/` page with a conversation.
-*   **Downloads Not Working / Markdown Formatting Issues**:
-    *   Check Chrome's download settings and ensure the site is not blocked from downloading files.
-    *   Verify your computer's download folder is accessible and has space.
-    *   If Markdown formatting is incorrect (especially for code), ensure the extension is up to date and report the issue if it persists.
-*   **Permissions**: The extension requires `clipboardRead` (to read content when you click Gemini's copy button, if that feature is enabled in settings) and `downloads` (to save files). Ensure these are granted.
-
-## Technical Details
-
-*   **Manifest Version**: 3
-*   **Core Technologies**: JavaScript, HTML, CSS
-*   **Key Libraries/APIs**: Chrome Extension APIs (Storage, Downloads, Scripting), DOM Manipulation, **Turndown.js** for HTML-to-Markdown conversion.
-*   **Required Permissions**: `clipboardRead`, `clipboardWrite`, `downloads`, `scripting`, `activeTab`, `storage`, `unlimitedStorage`
-*   **Target Website**: `https://gemini.google.com/*`
-*   **Browser Compatibility**: Designed for Google Chrome and other Chromium-based browsers that support Manifest V3 extensions.
-
-## Screenshots
-
-Below are examples of the extension's Utilities overlay in action:
-
-![Utilities Option](Screenshots/Utilities_Option.png)
-
-![Download Conversation Markdown](Screenshots/Download_Conversation_Markdown.png)
-
-![Copy HTML To Markdown](Screenshots/Copy_HTML_To_Markdown.png)
-
-![Viewing markdown](Screenshots/Viewing_markdown.png)
-
-## Acknowledgments
-
-*   This extension was developed with the assistance of AI tools, including GitHub Copilot, for code generation, suggestions, and problem-solving.
-*   The **Turndown.js** library is crucial for the HTML-to-Markdown conversion functionality.
-
----
-
-**Happy Markdown Creating! 🚀**
+Conversation data, semantic analysis, learned profiles, and archives stay in
+the browser. The extension does not send telemetry or conversation content to
+an external service.

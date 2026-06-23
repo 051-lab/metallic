@@ -1,0 +1,26 @@
+{
+  "name": "ai-chat-utilities",
+  "version": "2.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "watch": "node scripts/build.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "check": "npm run typecheck && npm test && npm run build",
+    "package": "npm run check && node scripts/package.mjs"
+  },
+  "dependencies": {
+    "turndown": "^7.2.1"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.322",
+    "@types/turndown": "^5.0.5",
+    "esbuild": "^0.25.5",
+    "fake-indexeddb": "^6.2.5",
+    "jsdom": "^26.1.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}

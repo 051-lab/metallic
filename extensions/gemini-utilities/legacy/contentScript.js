@@ -321,7 +321,6 @@ async function convertHtmlToJupyter(extractedData) {
     }
 }
 
-// Function to detect if the chat is part of a Gemini Notebookh markers for conversion
 // Function to detect if the chat is part of a Gemini Notebook
 function detectNotebookContext() {
     // Prefer explicit accessibility/test hooks. Avoid generic headings because

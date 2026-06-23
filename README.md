@@ -23,8 +23,8 @@
 
 ```
 metallic/
-├── comet-ntp/         # Comet custom new-tab bypass and dashboard
 ├── extensions/
+│   ├── comet-ntp/
 │   ├── gemini-utilities/
 │   └── localhost-dashboard/
 ├── shared/            # Reusable utilities and components
@@ -44,13 +44,13 @@ navigation, and network redirect layers.
 Load unpacked from:
 
 ```text
-comet-ntp
+extensions/comet-ntp
 ```
 
-### Gemini Utilities
+### AI Chat Utilities
 
-Adds export and archive tools to Gemini, including Markdown downloads,
-clipboard export, local conversation archives, and Jupyter Notebook export.
+Adds Markdown, Jupyter, clipboard, and local archive tools to Gemini, ChatGPT,
+Claude, Qwen, and other chatbot pages through guided capture.
 
 Load unpacked from:
 
