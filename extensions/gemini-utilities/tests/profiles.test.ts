@@ -84,6 +84,27 @@ describe("site profiles", () => {
     BUNDLED_PROFILES.forEach((profile) =>
       expect(validateSiteProfile(profile, "bundled").source).toBe("bundled"));
   });
+
+  it("extracts current Z.ai and Mistral live-DOM shapes", async () => {
+    const [zai, mistral] = BUNDLED_PROFILES;
+    document.body.innerHTML = `<div>
+      <div id="message-user-id" class="flex user-message">Build a wallpaper</div>
+      <div id="message-assistant-id" class="flex message-assistant-id">Generated concept</div>
+      <div class="messageInputContainer">Composer text</div>
+    </div>`;
+    const zaiDraft = await createProfileAdapter(zai!).extract(document);
+    expect(zaiDraft.messages.map((message) => [message.role, message.plainText])).toEqual([
+      ["user", "Build a wallpaper"],
+      ["assistant", "Generated concept"]
+    ]);
+
+    document.body.innerHTML = `<main>
+      <div class="group/message" data-message-author-role="user">Business question</div>
+      <div class="group/message" data-message-author-role="assistant">Business answer</div>
+    </main>`;
+    const mistralDraft = await createProfileAdapter(mistral!).extract(document);
+    expect(mistralDraft.messages.map((message) => message.role)).toEqual(["user", "assistant"]);
+  });
 });
 
 describe("semantic extraction", () => {

@@ -9,8 +9,10 @@ exporting, and archiving AI chatbot conversations.
 - ChatGPT
 - Claude
 - Qwen
-- Initial bundled profiles for Z.ai, Mistral Vibe, Ai2 Playground, and DeepSeek
-  Chat (pending authenticated smoke validation)
+- Bundled profiles for Z.ai and Mistral Vibe, validated against authenticated
+  conversations
+- Initial bundled profiles for Ai2 Playground and DeepSeek Chat, pending
+  authenticated smoke validation
 - Local semantic detection and guided calibration for other web chatbots
 
 ## Features
