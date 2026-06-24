@@ -1,0 +1,824 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>metallic · Chrome-extension skill set — Design</title>
+<meta name="description" content="Design spec for a focused set of ZCode skills that codify the patterns used by metallic's mature TypeScript Chrome extensions." />
+<style>
+  /* ── Design tokens ─────────────────────────────────────────────── */
+  :root {
+    /* Forged-metal palette: deep charcoal base, steel-blue accent, copper highlights */
+    --bg:            #0b0d12;
+    --bg-elev:       #11141b;
+    --bg-card:       #151922;
+    --bg-card-hi:    #1b212c;
+    --border:        #262d39;
+    --border-hi:     #3a4456;
+    --ink:           #edf2f8;
+    --ink-soft:      #b7c0ce;
+    --ink-mute:      #8993a3;
+    --accent:        #8ab4f8;     /* steel blue */
+    --accent-deep:   #5978a9;
+    --accent-glow:   rgba(138,180,248,0.14);
+    --copper:        #e8a87c;    /* forge heat */
+    --copper-deep:   #c98c5e;
+    --green:         #8fd3a8;
+    --amber:         #f4c57a;
+    --shadow-lg:     0 28px 90px #000c;
+    --shadow-md:     0 10px 30px #0008;
+    --radius:        16px;
+    --radius-sm:     10px;
+    --mono:          ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans:          "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --maxw:          1080px;
+    --nav-w:         240px;
+  }
+
+  /* ── Reset & base ──────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--ink);
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(138,180,248,0.08), transparent 60%),
+      radial-gradient(ellipse 60% 40% at 100% 100%, rgba(232,168,124,0.05), transparent 60%);
+    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* ── Typography ────────────────────────────────────────────────── */
+  h1, h2, h3, h4 { line-height: 1.2; font-weight: 700; letter-spacing: -0.01em; }
+  h2 { font-size: clamp(1.6rem, 3.2vw, 2.2rem); margin: 3rem 0 1rem; }
+  h3 { font-size: 1.3rem; margin: 2rem 0 0.75rem; color: var(--ink); }
+  h4 { font-size: 1.05rem; margin: 1.5rem 0 0.5rem; color: var(--ink-soft); }
+  p { margin: 0 0 1rem; color: var(--ink-soft); }
+  p:last-child { margin-bottom: 0; }
+  a { color: var(--accent); text-decoration: none; transition: color 0.15s ease; }
+  a:hover { color: #b9d0fc; text-decoration: underline; text-underline-offset: 3px; }
+  code {
+    font-family: var(--mono);
+    font-size: 0.875em;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    padding: 0.1em 0.4em;
+    border-radius: 6px;
+    color: var(--copper);
+  }
+  strong { color: var(--ink); font-weight: 600; }
+  ul, ol { margin: 0 0 1rem; padding-left: 1.4rem; color: var(--ink-soft); }
+  li { margin: 0.3rem 0; }
+  li::marker { color: var(--accent-deep); }
+
+  /* ── Layout shell ───────────────────────────────────────────────── */
+  .shell {
+    display: grid;
+    grid-template-columns: var(--nav-w) minmax(0, 1fr);
+    gap: 0;
+    max-width: var(--maxw);
+    margin: 0 auto;
+  }
+
+  /* ── Sticky table of contents ──────────────────────────────────── */
+  .toc {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: 100vh;
+    padding: 2rem 1.25rem 2rem 0;
+    overflow-y: auto;
+    border-right: 1px solid var(--border);
+  }
+  .toc-title {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink-mute);
+    margin: 0 0 1rem;
+    font-weight: 700;
+  }
+  .toc ul { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0; }
+  .toc a {
+    display: block;
+    padding: 0.4rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: var(--ink-mute);
+    border-left: 2px solid transparent;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .toc a:hover { background: var(--bg-elev); color: var(--ink-soft); text-decoration: none; }
+  .toc a.active {
+    color: var(--accent);
+    background: var(--accent-glow);
+    border-left-color: var(--accent);
+    font-weight: 600;
+  }
+  .toc .toc-sub a { padding-left: 1.5rem; font-size: 0.8rem; }
+
+  /* ── Main content ──────────────────────────────────────────────── */
+  main {
+    padding: 2.5rem 2.5rem 6rem;
+    min-width: 0;
+  }
+
+  /* ── Hero ───────────────────────────────────────────────────────── */
+  .hero {
+    padding: 3rem 0 2.5rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2rem;
+  }
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--copper);
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+  }
+  .hero-eyebrow::before {
+    content: "";
+    width: 28px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--copper), transparent);
+  }
+  .hero h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    margin: 0 0 0.75rem;
+    background: linear-gradient(135deg, var(--ink) 0%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero p { font-size: 1.125rem; color: var(--ink-soft); max-width: 60ch; }
+  .hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+    font-size: 0.85rem;
+    color: var(--ink-mute);
+  }
+  .hero-meta span { display: inline-flex; align-items: center; gap: 0.4rem; }
+  .hero-meta .pill {
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    color: var(--ink-soft);
+  }
+
+  /* ── Section ────────────────────────────────────────────────────── */
+  section { margin-bottom: 3.5rem; scroll-margin-top: 1.5rem; }
+  .section-lead { font-size: 1.05rem; color: var(--ink-soft); max-width: 65ch; }
+
+  /* ── Table ──────────────────────────────────────────────────────── */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border); }
+  th { background: var(--bg-elev); color: var(--ink-soft); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; }
+  td { color: var(--ink-soft); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg-card-hi); }
+  td code { border: none; background: transparent; padding: 0; }
+
+  /* ── Decisions list ─────────────────────────────────────────────── */
+  .decisions { list-style: none; padding: 0; }
+  .decisions li {
+    padding: 0.85rem 1rem 0.85rem 2.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 0.6rem;
+    position: relative;
+  }
+  .decisions li::before {
+    content: "✓";
+    position: absolute;
+    left: 1rem;
+    top: 0.85rem;
+    color: var(--green);
+    font-weight: 700;
+  }
+
+  /* ── Skill cards ────────────────────────────────────────────────── */
+  .skill-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  .skill-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .skill-card:hover { border-color: var(--border-hi); box-shadow: var(--shadow-md); }
+  .skill-card:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+  .skill-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+    color: inherit;
+    font: inherit;
+  }
+  .skill-head:hover { background: var(--bg-card-hi); }
+  .skill-head:focus-visible { outline: none; background: var(--bg-card-hi); }
+
+  .skill-num {
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent-deep), var(--accent));
+    color: #0b0d12;
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    font-size: 1rem;
+    font-family: var(--mono);
+  }
+  .skill-title { flex: 1; min-width: 0; }
+  .skill-name {
+    font-family: var(--mono);
+    font-size: 1.05rem;
+    color: var(--ink);
+    font-weight: 600;
+    word-break: break-all;
+  }
+  .skill-trigger {
+    font-size: 0.82rem;
+    color: var(--ink-mute);
+    margin-top: 0.25rem;
+  }
+  .skill-chev {
+    flex-shrink: 0;
+    color: var(--ink-mute);
+    transition: transform 0.25s ease;
+    margin-top: 0.25rem;
+  }
+  .skill-head[aria-expanded="true"] .skill-chev { transform: rotate(180deg); color: var(--accent); }
+
+  .skill-body {
+    padding: 0 1.5rem;
+    border-top: 1px solid transparent;
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.3s ease, padding 0.3s ease, border-color 0.3s ease;
+  }
+  /* expand when the sibling .skill-head button is aria-expanded="true" */
+  .skill-head[aria-expanded="true"] + .skill-body { grid-template-rows: 1fr; padding-bottom: 1.5rem; border-top-color: var(--border); }
+  .skill-body-inner { overflow: hidden; }
+  .skill-head[aria-expanded="true"] + .skill-body .skill-body-inner { padding-top: 1.25rem; }
+
+  .skill-body h4 { color: var(--accent); margin-top: 1.25rem; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em; }
+  .skill-body h4:first-child { margin-top: 0; }
+  .skill-body p, .skill-body li { font-size: 0.92rem; color: var(--ink-soft); }
+
+  .pattern-block {
+    position: relative;
+    margin: 0.75rem 0 1rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+  .pattern-block pre {
+    margin: 0;
+    padding: 1rem 1.1rem;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+  .copy-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    color: var(--ink-mute);
+    padding: 0.3rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .pattern-block:hover .copy-btn { opacity: 1; }
+  .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+  .copy-btn.copied { color: var(--green); border-color: var(--green); opacity: 1; }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+  .tag {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    padding: 0.15rem 0.55rem;
+    border-radius: 6px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    color: var(--ink-mute);
+  }
+
+  /* ── Cross-cutting / out-of-scope blocks ────────────────────────── */
+  .note-block {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-sm);
+    padding: 1.25rem 1.5rem;
+    margin: 1rem 0;
+  }
+  .note-block.copper { border-left-color: var(--copper); }
+  .note-block h4 { margin-top: 0; }
+  .note-block ul { margin-bottom: 0; }
+
+  /* ── Footer ─────────────────────────────────────────────────────── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2rem 0 0;
+    margin-top: 4rem;
+    color: var(--ink-mute);
+    font-size: 0.85rem;
+  }
+
+  /* ── Skip link ──────────────────────────────────────────────────── */
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 100;
+    background: var(--accent);
+    color: #0b0d12;
+    padding: 0.75rem 1.25rem;
+    border-radius: 0 0 var(--radius-sm) 0;
+    font-weight: 600;
+  }
+  .skip-link:focus { left: 0; }
+
+  /* ── Back-to-top ───────────────────────────────────────────────── */
+  .to-top {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--bg-card);
+    border: 1px solid var(--border-hi);
+    color: var(--accent);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+    box-shadow: var(--shadow-md);
+    z-index: 50;
+  }
+  .to-top.show { opacity: 1; pointer-events: auto; }
+  .to-top:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .to-top:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ── Responsive ────────────────────────────────────────────────── */
+  @media (max-width: 880px) {
+    .shell { grid-template-columns: 1fr; }
+    .toc {
+      position: static;
+      height: auto;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      padding: 1.5rem 1.5rem 1rem;
+      margin: 0 -2.5rem 2rem;
+    }
+    main { padding: 1.5rem 1.5rem 4rem; }
+    .hero { padding: 2rem 0 1.5rem; }
+  }
+
+  /* ── Reduced motion ─────────────────────────────────────────────── */
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+<a href="#content" class="skip-link">Skip to content</a>
+
+<div class="shell">
+  <!-- ── Table of contents ─────────────────────────────────────── -->
+  <nav class="toc" aria-label="Document sections">
+    <div class="toc-title">On this page</div>
+    <ul>
+      <li><a href="#context">Context</a></li>
+      <li><a href="#decisions">Decisions</a></li>
+      <li><a href="#skill-set">The skill set</a>
+        <ul class="toc-sub">
+          <li><a href="#skill-1">1 · scaffold-extension</a></li>
+          <li><a href="#skill-2">2 · mv3-manifest</a></li>
+          <li><a href="#skill-3">3 · capture-ux</a></li>
+          <li><a href="#skill-4">4 · archive-db</a></li>
+          <li><a href="#skill-5">5 · extension-test</a></li>
+          <li><a href="#skill-6">6 · load-in-chrome</a></li>
+        </ul>
+      </li>
+      <li><a href="#cross-cutting">Cross-cutting</a></li>
+      <li><a href="#out-of-scope">Out of scope</a></li>
+    </ul>
+  </nav>
+
+  <main id="content">
+    <!-- ── Hero ──────────────────────────────────────────────────── -->
+    <header class="hero">
+      <div class="hero-eyebrow">Forged in code · Finished in chrome</div>
+      <h1>metallic Chrome-extension skill set</h1>
+      <p>A focused set of user-level ZCode skills that encode the patterns used by metallic's mature TypeScript Chrome extensions (gemini-utilities, tube-utilities), so new extensions inherit a proven architecture instead of re-deriving it.</p>
+      <div class="hero-meta">
+        <span class="pill">Date · 2026-06-23</span>
+        <span class="pill">Status · Approved</span>
+        <span>🔗 051-lab/metallic</span>
+      </div>
+    </header>
+
+    <!-- ── Context ──────────────────────────────────────────────── -->
+    <section id="context">
+      <h2>Context</h2>
+      <p class="section-lead">metallic is a Chrome extension forge (GitHub: 051-lab/metallic). It currently holds five extensions of varying sophistication:</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Extension</th><th>Stack</th><th>Pattern</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>comet-ntp</code></td><td>vanilla JS</td><td>MV3 NTP override + declarativeNetRequest (legacy)</td></tr>
+            <tr><td><code>freedium</code></td><td>dual MV2/MV3</td><td>Chrome + Firefox build (legacy)</td></tr>
+            <tr><td><code>localhost-dashboard</code></td><td>vanilla JS</td><td>modular <code>src/</code> (legacy)</td></tr>
+            <tr><td><code>gemini-utilities</code> (v2.1)</td><td>TS + esbuild + vitest</td><td><strong>mature canonical pattern</strong></td></tr>
+            <tr><td><code>tube-utilities</code> (v1.0)</td><td>TS + esbuild + vitest</td><td><strong>mature canonical pattern</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><code>shared/</code> and <code>templates/</code> exist but are empty. The two mature extensions already encode a reusable architecture; the skills below codify it.</p>
+    </section>
+
+    <!-- ── Decisions ─────────────────────────────────────────────── -->
+    <section id="decisions">
+      <h2>Decisions</h2>
+      <ul class="decisions">
+        <li><strong>Organization:</strong> focused skill set — several small, single-purpose skills that each fire at the right moment, rather than one comprehensive skill.</li>
+        <li><strong>Location:</strong> user-level ZCode skills dir <code>C:\Users\soloa\.zcode\skills\</code> (available across projects). This design doc is also committed to the repo's <code>planning/</code> dir as a record.</li>
+        <li><strong>Stack standardized:</strong> TypeScript + esbuild + vitest + <code>@types/chrome</code>, MV3, matching gemini-utilities / tube-utilities. Vanilla-JS extensions are treated as legacy.</li>
+        <li><strong>Anatomy:</strong> each skill is a folder with <code>SKILL.md</code> (frontmatter + body) plus optional <code>references/</code>, <code>assets/</code>, <code>scripts/</code> per the skill-creator anatomy. <code>agents/openai.yaml</code> generated via the skill-creator's <code>init_skill.py</code> / <code>generate_openai_yaml.py</code>.</li>
+        <li><strong>Leanness:</strong> SKILL.md bodies kept under ~500 lines; detail moved to <code>references/</code>. Descriptions written for precise triggering and to avoid over-firing on general web dev.</li>
+      </ul>
+    </section>
+
+    <!-- ── Skill set ────────────────────────────────────────────── -->
+    <section id="skill-set">
+      <h2>Skill set</h2>
+      <p class="section-lead">Six skills, each small and precisely triggered. Click a card to expand its details.</p>
+
+      <div class="skill-grid" id="skills">
+
+        <!-- Skill 1 -->
+        <article class="skill-card" id="skill-1">
+          <button class="skill-head" aria-expanded="false" aria-controls="skill-1-body">
+            <span class="skill-num">1</span>
+            <span class="skill-title">
+              <span class="skill-name">metallic-scaffold-extension</span>
+              <span class="skill-trigger">Triggers · scaffolding a new Chrome extension under extensions/</span>
+            </span>
+            <svg class="skill-chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="skill-body" id="skill-1-body">
+            <div class="skill-body-inner">
+              <h4>Body</h4>
+              <p>Produces the canonical layout: <code>extensions/&lt;name&gt;/{src/{core,ui,adapters,entries},scripts/{build.mjs,package.mjs},tests,tsconfig.json,package.json,manifest.json}</code>; the <code>package.json</code> script set (<code>build</code> / <code>watch</code> / <code>typecheck</code> / <code>test</code> / <code>check</code> / <code>package</code>); esbuild config (<code>format:"iife"</code>, <code>target:"chrome120"</code>, entrypoints <code>background</code> / <code>content</code> / <code>popup</code> / <code>options</code> / <code>archive</code>); <code>.gitignore</code> for <code>dist/</code> + <code>node_modules/</code>.</p>
+              <h4>Assets</h4>
+              <p><code>assets/template/</code> — a copyable starter tree (manifest, build.mjs, tsconfig, package.json, stub entries, .gitignore) derived from tube-utilities with <code>{{name}}</code> / <code>{{version}}</code> placeholders.</p>
+              <h4>References</h4>
+              <p><code>references/layout-map.md</code> — role of each directory.</p>
+              <div class="tags">
+                <span class="tag">assets/template/</span>
+                <span class="tag">references/layout-map.md</span>
+                <span class="tag">esbuild</span>
+                <span class="tag">vitest</span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Skill 2 -->
+        <article class="skill-card" id="skill-2">
+          <button class="skill-head" aria-expanded="false" aria-controls="skill-2-body">
+            <span class="skill-num">2</span>
+            <span class="skill-title">
+              <span class="skill-name">metallic-mv3-manifest</span>
+              <span class="skill-trigger">Triggers · authoring or editing a manifest.json, bumping version, adding a permission</span>
+            </span>
+            <svg class="skill-chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="skill-body" id="skill-2-body">
+            <div class="skill-body-inner">
+              <h4>Body</h4>
+              <p>MV3 fields with metallic conventions — <code>background.service_worker</code> (→ <code>dist/background.js</code>), <code>action.default_popup</code>, <code>options_ui.open_in_tab</code>, <code>web_accessible_resources</code> with <code>matches</code>, <code>declarativeNetRequest.rule_resources</code>, icons 16/48/128.</p>
+              <h4>References</h4>
+              <p><code>references/permissions.md</code> — least-privilege philosophy, <code>optional_host_permissions</code> (<code>https://*/*</code> + <code>http://*/*</code>) vs required <code>host_permissions</code>, what each common permission (<code>scripting</code>, <code>storage</code>, <code>unlimitedStorage</code>, <code>downloads</code>, <code>clipboardWrite</code>, <code>activeTab</code>, <code>declarativeNetRequest</code>) buys, and CWS review gotchas (no broad <code>&lt;all_urls&gt;</code> without justification; host-permission justification text).</p>
+              <div class="pattern-block">
+                <button class="copy-btn" data-copy-target="p2">Copy</button>
+                <pre id="p2">"permissions": ["activeTab","clipboardWrite","downloads","scripting","storage","unlimitedStorage"],
+"optional_host_permissions": ["https://*/*", "http://*/*"]</pre>
+              </div>
+              <div class="tags">
+                <span class="tag">references/permissions.md</span>
+                <span class="tag">MV3</span>
+                <span class="tag">CWS compliance</span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Skill 3 -->
+        <article class="skill-card" id="skill-3">
+          <button class="skill-head" aria-expanded="false" aria-controls="skill-3-body">
+            <span class="skill-num">3</span>
+            <span class="skill-title">
+              <span class="skill-name">metallic-capture-ux</span>
+              <span class="skill-trigger">Triggers · building on-page capture / export flows (transcript grabber, conversation exporter, scraper-overlay)</span>
+            </span>
+            <svg class="skill-chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="skill-body" id="skill-3-body">
+            <div class="skill-body-inner">
+              <h4>Body</h4>
+              <p>The launcher → overlay → picker → calibration flow; the <strong>background message-router pattern</strong> with <code>{ok, error}</code> envelopes and <code>return true</code> for async <code>sendResponse</code>; the <strong>lazy injection idiom</strong> — ping the tab, on failure <code>chrome.scripting.executeScript({files:["dist/content.js"]})</code>, then <code>sendMessage SHOW_OVERLAY</code>; overlay lifecycle and toast UI.</p>
+              <div class="pattern-block">
+                <button class="copy-btn" data-copy-target="p3">Copy</button>
+                <pre id="p3">// the async message-router envelope — never forget `return true`
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  const handle = async () => {
+    switch (message.type) {
+      case "START_CAPTURE": { /* ... */ return { ok: true }; }
+      default: return { ok: false, error: "Unknown request." };
+    }
+  };
+  handle()
+    .then(sendResponse)
+    .catch((e) => sendResponse({ ok: false, error: e instanceof Error ? e.message : String(e) }));
+  return true;  // keep channel open for async sendResponse
+});</pre>
+              </div>
+              <h4>References</h4>
+              <p><code>references/scripting-registration.md</code> — the <code>reconcileContentScripts</code> idempotent <code>chrome.scripting.registerContentScripts</code> pattern (register on <code>onInstalled</code> / <code>onStartup</code> / permission changes, <code>persistAcrossSessions</code>, <code>document_idle</code>) vs one-time fallback injection; the real <code>permissions.ts</code> as an exemplar.</p>
+              <div class="tags">
+                <span class="tag">references/scripting-registration.md</span>
+                <span class="tag">Shadow DOM</span>
+                <span class="tag">lazy injection</span>
+                <span class="tag">SPA nav</span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Skill 4 -->
+        <article class="skill-card" id="skill-4">
+          <button class="skill-head" aria-expanded="false" aria-controls="skill-4-body">
+            <span class="skill-num">4</span>
+            <span class="skill-title">
+              <span class="skill-name">metallic-archive-db</span>
+              <span class="skill-trigger">Triggers · adding local persistence / archive / history / snapshot store</span>
+            </span>
+            <svg class="skill-chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="skill-body" id="skill-4-body">
+            <div class="skill-body-inner">
+              <h4>Body</h4>
+              <p>The IndexedDB pattern — <code>DB_NAME</code> / <code>STORE</code> / <code>DB_VERSION</code> constants; <code>openDatabase</code> with <code>onupgradeneeded</code> creating the store + indexes; the <code>storeRequest(mode, operation)</code> helper wrapping tx + <code>onsuccess</code> / <code>onerror</code> + <code>database.close()</code> on <code>oncomplete</code>; <code>saveSnapshot</code> (<code>crypto.randomUUID</code> + <code>put</code>), <code>getSnapshot</code>, <code>deleteSnapshot</code>, <code>listSnapshots</code> (filter + sort by <code>capturedAt</code> desc + map to list items); <code>schemaVersion: 1</code> on records for future migrations.</p>
+              <div class="pattern-block">
+                <button class="copy-btn" data-copy-target="p4">Copy</button>
+                <pre id="p4">async function storeRequest&lt;T&gt;(mode, operation): Promise&lt;T&gt; {
+  const database = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction(STORE, mode);
+    const request = operation(transaction.objectStore(STORE));
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+    transaction.oncomplete = () => database.close();  // SW-safe
+  });
+}</pre>
+              </div>
+              <h4>References</h4>
+              <p><code>references/background-archive-router.md</code> — the <code>ARCHIVE_SAVE</code> / <code>ARCHIVE_LIST</code> / <code>ARCHIVE_GET</code> / <code>ARCHIVE_DELETE</code> message types wired in <code>background.ts</code>, with the <code>{ok, ...}</code> response shape.</p>
+              <div class="tags">
+                <span class="tag">references/background-archive-router.md</span>
+                <span class="tag">IndexedDB</span>
+                <span class="tag">schemaVersion</span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Skill 5 -->
+        <article class="skill-card" id="skill-5">
+          <button class="skill-head" aria-expanded="false" aria-controls="skill-5-body">
+            <span class="skill-num">5</span>
+            <span class="skill-title">
+              <span class="skill-name">metallic-extension-test</span>
+              <span class="skill-trigger">Triggers · writing tests for an extension or running the check pipeline</span>
+            </span>
+            <svg class="skill-chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="skill-body" id="skill-5-body">
+            <div class="skill-body-inner">
+              <h4>Body</h4>
+              <p>vitest + <code>jsdom</code> + <code>fake-indexeddb</code> environment setup; <code>tsconfig</code> <code>types:["chrome","vitest/globals"]</code>; mocking <code>chrome.*</code> via a minimal <code>globalThis.chrome</code> stub, mocking IndexedDB via <code>fake-indexeddb</code>, DOM assertions via <code>jsdom</code>; the <code>check</code> script as the single quality gate (<code>typecheck && test && build</code>).</p>
+              <div class="pattern-block">
+                <button class="copy-btn" data-copy-target="p5">Copy</button>
+                <pre id="p5">// tests/setup.ts — the single quality gate
+"scripts": {
+  "typecheck": "tsc --noEmit",
+  "test":       "vitest run",
+  "build":      "node scripts/build.mjs",
+  "check":      "npm run typecheck && npm test && npm run build",
+  "package":    "npm run check && node scripts/package.mjs"
+}</pre>
+              </div>
+              <h4>References</h4>
+              <p><code>references/chrome-stub.md</code> — a reusable minimal <code>chrome</code> mock object (<code>runtime.onMessage</code>, <code>tabs.query</code>, <code>scripting.executeScript</code>, <code>storage</code>) suitable for tests.</p>
+              <div class="tags">
+                <span class="tag">references/chrome-stub.md</span>
+                <span class="tag">vitest</span>
+                <span class="tag">jsdom</span>
+                <span class="tag">fake-indexeddb</span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Skill 6 -->
+        <article class="skill-card" id="skill-6">
+          <button class="skill-head" aria-expanded="false" aria-controls="skill-6-body">
+            <span class="skill-num">6</span>
+            <span class="skill-title">
+              <span class="skill-name">metallic-load-in-chrome</span>
+              <span class="skill-trigger">Triggers · loading / iterating / publishing an unpacked extension</span>
+            </span>
+            <svg class="skill-chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="skill-body" id="skill-6-body">
+            <div class="skill-body-inner">
+              <h4>Body</h4>
+              <p><code>chrome://extensions</code> → Developer mode → Load unpacked → select <code>extensions/&lt;name&gt;</code> (or <code>dist/</code> if packaged) → reload-on-change; debugging — service-worker logs via the <code>Inspect</code> link, content-script logs via page DevTools, the <code>chrome.scripting</code> re-injection quirk after a content-script change (reload the tab, not just the extension); <code>npm run package</code> producing a CWS-ready zip from <code>dist/</code>; CWS upload checklist.</p>
+              <h4>References</h4>
+              <p><code>references/reload-quirks.md</code> — gotchas (manifest permission changes need full reload + re-grant; <code>declarativeNetRequest</code> rules need ruleset toggle; <code>web_accessible_resources</code> changes need tab refresh).</p>
+              <div class="tags">
+                <span class="tag">references/reload-quirks.md</span>
+                <span class="tag">load unpacked</span>
+                <span class="tag">CWS publish</span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ── Cross-cutting ────────────────────────────────────────── -->
+    <section id="cross-cutting">
+      <h2>Cross-cutting notes</h2>
+      <div class="note-block">
+        <ul>
+          <li>All <code>description</code> fields are written for <strong>precise triggering</strong> and to <strong>avoid over-firing</strong> on general web dev (e.g. "Use when scaffolding a new Chrome extension <em>under the metallic extensions/ tree</em>…").</li>
+          <li>Skills reference each other where natural (scaffold → manifest → capture-ux → archive-db → test → load), but each is independently usable.</li>
+          <li>Each SKILL.md kept lean; detail moved to <code>references/</code>.</li>
+          <li><code>agents/openai.yaml</code> generated for each via the skill-creator's <code>init_skill.py</code> / <code>generate_openai_yaml.py</code>.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ── Out of scope ─────────────────────────────────────────── -->
+    <section id="out-of-scope">
+      <h2>Out of scope</h2>
+      <div class="note-block copper">
+        <ul>
+          <li>Vanilla-JS extension authoring (legacy stack).</li>
+          <li>Firefox / MV2 builds (freedium pattern).</li>
+          <li>A "comprehensive single skill" alternative — explicitly rejected in favor of the focused set.</li>
+          <li>Reference material for rarely-used Chrome capabilities (side-panel, context menus, alarms) — folded into the relevant skill's <code>references/</code> only where it fits naturally; not its own skills.</li>
+        </ul>
+      </div>
+    </section>
+
+    <footer>
+      <p>metallic · Chrome-extension skill set design · 2026-06-23 · <a href="https://github.com/051-lab/metallic">051-lab/metallic</a></p>
+    </footer>
+  </main>
+</div>
+
+<button class="to-top" aria-label="Back to top" title="Back to top">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg>
+</button>
+
+<script>
+  // ── Expand/collapse skill cards ──────────────────────────────────
+  document.querySelectorAll(".skill-head").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const open = btn.getAttribute("aria-expanded") === "true";
+      btn.setAttribute("aria-expanded", String(!open));
+    });
+  });
+
+  // ── Copy-to-clipboard for pattern blocks ────────────────────────
+  document.querySelectorAll(".copy-btn").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const target = document.getElementById(btn.dataset.copyTarget);
+      if (!target) return;
+      try {
+        await navigator.clipboard.writeText(target.textContent);
+        const prev = btn.textContent;
+        btn.textContent = "Copied ✓";
+        btn.classList.add("copied");
+        setTimeout(() => {
+          btn.textContent = prev;
+          btn.classList.remove("copied");
+        }, 1400);
+      } catch {
+        btn.textContent = "Press Ctrl+C";
+      }
+    });
+  });
+
+  // ── Scroll-spy: highlight active TOC entry ───────────────────────
+  const tocLinks = document.querySelectorAll(".toc a");
+  const sections = Array.from(tocLinks)
+    .map((link) => {
+      const id = link.getAttribute("href").slice(1);
+      const el = document.getElementById(id);
+      return el ? { link, el } : null;
+    })
+    .filter(Boolean);
+
+  const setActive = (entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        const match = sections.find((s) => s.el === entry.target);
+        if (match) {
+          tocLinks.forEach((l) => l.classList.remove("active"));
+          match.link.classList.add("active");
+        }
+      }
+    });
+  };
+
+  const spy = new IntersectionObserver(setActive, {
+    rootMargin: "-15% 0px -70% 0px",
+    threshold: 0
+  });
+  sections.forEach((s) => spy.observe(s.el));
+
+  // ── Back-to-top visibility ───────────────────────────────────────
+  const toTop = document.querySelector(".to-top");
+  const onScroll = () => {
+    if (window.scrollY > 600) toTop.classList.add("show");
+    else toTop.classList.remove("show");
+  };
+  window.addEventListener("scroll", onScroll, { passive: true });
+  toTop.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  // ── Keyboard: Escape collapses any expanded card ─────────────────
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      const active = document.activeElement;
+      if (active && active.classList.contains("skill-head")) {
+        active.setAttribute("aria-expanded", "false");
+      }
+    }
+  });
+</script>
+</body>
+</html>
