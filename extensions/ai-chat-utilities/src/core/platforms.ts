@@ -24,6 +24,12 @@ export const PLATFORMS: PlatformDefinition[] = [
     name: "Qwen",
     origins: ["https://chat.qwen.ai/*"],
     matches: ["https://chat.qwen.ai/*"]
+  },
+  {
+    id: "google-ai-mode",
+    name: "Google AI Mode",
+    origins: ["https://www.google.com/*", "https://google.com/*"],
+    matches: ["https://www.google.com/*", "https://google.com/*"]
   }
 ];
 
@@ -40,4 +46,14 @@ export function platformForUrl(value: string): PlatformDefinition | undefined {
   return PLATFORMS.find((platform) =>
     platform.origins.some((origin) => url.href.startsWith(origin.replace("*", "")))
   );
+}
+
+export function isGoogleAiModeUrl(url: URL): boolean {
+  const host = url.hostname.replace(/^www\./, "");
+  if (host !== "google.com") return false;
+  if (url.pathname === "/ai" || url.pathname.startsWith("/ai/")) return true;
+  if (url.pathname === "/aimode" || url.pathname.startsWith("/aimode/")) return true;
+  if (url.pathname === "/search" && url.searchParams.get("udm") === "50") return true;
+  if (url.pathname === "/search" && /(^|[&?])ai_mode=/.test(url.search)) return true;
+  return false;
 }

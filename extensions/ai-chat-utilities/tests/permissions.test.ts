@@ -8,10 +8,19 @@ import {
 describe("optional platform permissions", () => {
   it("registers only enabled platforms with granted origins", () => {
     const scripts = desiredPlatformScripts(
-      ["gemini", "chatgpt", "claude"],
-      ["https://gemini.google.com/*", "https://claude.ai/*"]
+      ["gemini", "chatgpt", "claude", "google-ai-mode"],
+      [
+        "https://gemini.google.com/*",
+        "https://claude.ai/*",
+        "https://www.google.com/*",
+        "https://google.com/*"
+      ]
     );
-    expect(scripts.map((script) => script.id)).toEqual(["ai-chat-gemini", "ai-chat-claude"]);
+    expect(scripts.map((script) => script.id)).toEqual([
+      "ai-chat-gemini",
+      "ai-chat-claude",
+      "ai-chat-google-ai-mode"
+    ]);
   });
 
   it("removes managed registrations without touching unrelated scripts", async () => {

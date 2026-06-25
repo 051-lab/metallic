@@ -2,6 +2,7 @@ import { chatgptAdapter } from "./chatgpt";
 import { claudeAdapter } from "./claude";
 import { geminiAdapter } from "./gemini";
 import { genericAdapter } from "./generic";
+import { googleAiModeAdapter } from "./google-ai-mode";
 import { BUNDLED_PROFILES } from "./bundled-profiles";
 import { createProfileAdapter } from "./profile-adapter";
 import { listLocalProfiles, profileMatches } from "../core/site-profiles";
@@ -12,7 +13,8 @@ export const adapters: PlatformAdapter[] = [
   geminiAdapter,
   chatgptAdapter,
   claudeAdapter,
-  qwenAdapter
+  qwenAdapter,
+  googleAiModeAdapter
 ];
 
 export function adapterForUrl(value: string): PlatformAdapter {

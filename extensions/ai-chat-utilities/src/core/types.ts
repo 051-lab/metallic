@@ -3,6 +3,7 @@ export type PlatformId =
   | "chatgpt"
   | "claude"
   | "qwen"
+  | "google-ai-mode"
   | "generic"
   | `profile:${string}`;
 export type MessageRole = "user" | "assistant" | "system" | "tool" | "unknown";
@@ -68,7 +69,7 @@ export interface PlatformAdapter {
 }
 
 export interface PlatformDefinition {
-  id: "gemini" | "chatgpt" | "claude" | "qwen";
+  id: "gemini" | "chatgpt" | "claude" | "qwen" | "google-ai-mode";
   name: string;
   origins: string[];
   matches: string[];

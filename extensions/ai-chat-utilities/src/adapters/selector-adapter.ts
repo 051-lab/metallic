@@ -62,7 +62,7 @@ export function createSelectorAdapter(config: SelectorAdapterConfig): PlatformAd
       const virtualized = possibleVirtualization(document);
       return {
         title: firstText(document, config.titleSelectors) ||
-          document.title.replace(/\s*[-|]\s*(Gemini|ChatGPT|Claude|Qwen).*$/i, "").trim() ||
+          document.title.replace(/\s*[-|]\s*(Gemini|ChatGPT|Claude|Qwen|Google AI Mode).*$/i, "").trim() ||
           `${config.displayName} conversation`,
         context,
         messages,

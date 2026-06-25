@@ -25,6 +25,12 @@
       name: "Qwen",
       origins: ["https://chat.qwen.ai/*"],
       matches: ["https://chat.qwen.ai/*"]
+    },
+    {
+      id: "google-ai-mode",
+      name: "Google AI Mode",
+      origins: ["https://www.google.com/*", "https://google.com/*"],
+      matches: ["https://www.google.com/*", "https://google.com/*"]
     }
   ];
   function platformForUrl(value) {

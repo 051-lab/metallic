@@ -860,7 +860,7 @@
         }
         const virtualized = possibleVirtualization(document2);
         return {
-          title: firstText(document2, config.titleSelectors) || document2.title.replace(/\s*[-|]\s*(Gemini|ChatGPT|Claude|Qwen).*$/i, "").trim() || `${config.displayName} conversation`,
+          title: firstText(document2, config.titleSelectors) || document2.title.replace(/\s*[-|]\s*(Gemini|ChatGPT|Claude|Qwen|Google AI Mode).*$/i, "").trim() || `${config.displayName} conversation`,
           context,
           messages,
           completeness: virtualized ? "possibly-truncated" : "complete",
@@ -975,6 +975,103 @@
           `Local semantic detection confidence: ${Math.round(result.confidence * 100)}%. Review speaker roles and content before relying on the export.`
         ]
       };
+    }
+  };
+
+  // src/core/platforms.ts
+  function isGoogleAiModeUrl(url) {
+    const host = url.hostname.replace(/^www\./, "");
+    if (host !== "google.com") return false;
+    if (url.pathname === "/ai" || url.pathname.startsWith("/ai/")) return true;
+    if (url.pathname === "/aimode" || url.pathname.startsWith("/aimode/")) return true;
+    if (url.pathname === "/search" && url.searchParams.get("udm") === "50") return true;
+    if (url.pathname === "/search" && /(^|[&?])ai_mode=/.test(url.search)) return true;
+    return false;
+  }
+
+  // src/adapters/google-ai-mode.ts
+  var MESSAGE_SELECTORS = [
+    "[data-message-author-role]",
+    "[data-message-role]",
+    "[data-author]",
+    "[data-role='user']",
+    "[data-role='assistant']",
+    "[role='article']",
+    "main article",
+    "main [class*='message']",
+    "main [class*='Message']",
+    "main [class*='response']",
+    "main [class*='Response']",
+    "main [class*='answer']",
+    "main [class*='Answer']",
+    "main [class*='query']",
+    "main [class*='Query']"
+  ];
+  function usable(element) {
+    if (element.closest("nav, aside, header, footer, [role='navigation'], [aria-hidden='true']")) {
+      return false;
+    }
+    if (element.matches("button, form, textarea, input, [contenteditable='true']")) return false;
+    const text = element.textContent?.trim() || "";
+    if (text.length < 2 || text.length > 25e4) return false;
+    return true;
+  }
+  function googleRole(element, index) {
+    const explicit = roleFromElement(element);
+    if (explicit !== "unknown") return explicit;
+    const signal = [
+      element.getAttribute("aria-label"),
+      element.getAttribute("data-testid"),
+      element.getAttribute("data-role"),
+      element.className,
+      element.id
+    ].join(" ").toLowerCase();
+    if (/(^|\W)(you|your|user|query|question|prompt)(\W|$)/.test(signal)) return "user";
+    if (/(ai\s*mode|assistant|answer|response|overview|gemini)/.test(signal)) return "assistant";
+    return index % 2 === 0 ? "user" : "assistant";
+  }
+  function titleFor(document2) {
+    return firstText(document2, [
+      "h1",
+      "main h1",
+      "[data-attrid='title']",
+      "[role='heading'][aria-level='1']"
+    ]) || document2.title.replace(/\s*[-|]\s*(Google Search|Google|AI Mode).*$/i, "").replace(/^AI Mode\s*[-|]\s*/i, "").trim() || "Google AI Mode conversation";
+  }
+  var googleAiModeAdapter = {
+    id: "google-ai-mode",
+    displayName: "Google AI Mode",
+    adapterVersion: 1,
+    hostPatterns: ["google.com", "www.google.com"],
+    matches: isGoogleAiModeUrl,
+    detect(document2) {
+      const semantic = semanticExtraction(document2);
+      const googleCandidates = dedupeNested(queryComposedAll(MESSAGE_SELECTORS, document2).filter(usable));
+      const count = Math.max(semantic.elements.length, googleCandidates.length);
+      return {
+        confidence: count >= 2 ? Math.max(0.76, semantic.confidence) : semantic.confidence,
+        reason: `${count} Google AI Mode message candidates`
+      };
+    },
+    async extract(document2) {
+      const googleCandidates = dedupeNested(queryComposedAll(MESSAGE_SELECTORS, document2).filter(usable));
+      const semantic = semanticExtraction(document2);
+      const source = googleCandidates.length >= 2 ? googleCandidates : semantic.elements;
+      const virtualized = possibleVirtualization(document2);
+      return {
+        title: titleFor(document2),
+        context: {
+          surface: "Google Search AI Mode"
+        },
+        messages: source.map(
+          (element, index) => messageFromElement(element, googleRole(element, index))
+        ).filter((message) => message.plainText || message.markdown),
+        completeness: virtualized ? "possibly-truncated" : "complete",
+        warnings: virtualized ? ["Google AI Mode may virtualize older content. Scroll through the thread before capture."] : []
+      };
+    },
+    getNewChatTarget() {
+      return "https://www.google.com/ai";
     }
   };
 
@@ -1307,7 +1404,8 @@
     geminiAdapter,
     chatgptAdapter,
     claudeAdapter,
-    qwenAdapter
+    qwenAdapter,
+    googleAiModeAdapter
   ];
   async function resolveAdapter(value) {
     let url;

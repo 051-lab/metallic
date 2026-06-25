@@ -9,6 +9,7 @@ exporting, and archiving AI chatbot conversations.
 - ChatGPT
 - Claude
 - Qwen
+- Google AI Mode
 - Bundled profiles for Z.ai, Mistral Vibe, Ai2 Playground, and DeepSeek Chat,
   validated against authenticated conversations
 - Local semantic detection and guided calibration for other web chatbots

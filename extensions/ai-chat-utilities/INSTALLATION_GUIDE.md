@@ -19,8 +19,8 @@ npm run check
 ## Enable platforms
 
 Open the extension's **Details → Extension options** page and enable Gemini,
-ChatGPT, Claude, or Qwen. Chrome requests access separately for each selected
-site. Disabled sites receive no persistent access.
+ChatGPT, Claude, Qwen, or Google AI Mode. Chrome requests access separately for
+each selected site. Disabled sites receive no persistent access.
 
 On other chatbot pages, click the toolbar action and choose **Capture this page
 once**. Choose **Always enable on this site** only when you want persistent

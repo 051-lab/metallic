@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "AI Chat Utilities",
-  "version": "2.1.0",
-  "description": "Capture, export, and archive conversations from Gemini, ChatGPT, Claude, Qwen, and other AI chatbots.",
+  "version": "2.2.0",
+  "description": "Capture, export, and archive conversations from Gemini, ChatGPT, Claude, Qwen, Google AI Mode, and other AI chatbots.",
   "action": {
     "default_popup": "popup.html",
     "default_title": "AI Chat Utilities",

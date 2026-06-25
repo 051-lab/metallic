@@ -1,4 +1,4 @@
-# AI Chat Utilities v2.1 Architecture
+# AI Chat Utilities v2.2 Architecture
 
 The extension uses a platform-adapter architecture:
 
