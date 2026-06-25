@@ -38,7 +38,7 @@ npm run check
 The extension root remains directly loadable after `npm run build`:
 
 ```text
-extensions/gemini-utilities
+extensions/ai-chat-utilities
 ```
 
 Authored TypeScript lives in `src/`; deterministic browser bundles are emitted
@@ -50,7 +50,7 @@ to `dist/`. The v1 implementation is retained in `legacy/` for reference.
 2. Open `chrome://extensions`.
 3. Enable Developer mode.
 4. Click **Load unpacked**.
-5. Select `extensions/gemini-utilities`.
+5. Select `extensions/ai-chat-utilities`.
 6. Open the extension settings and enable persistent access for the platforms
    you use.
 

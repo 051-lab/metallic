@@ -454,7 +454,7 @@
     <header class="hero">
       <div class="hero-eyebrow">Forged in code · Finished in chrome</div>
       <h1>metallic Chrome-extension skill set</h1>
-      <p>A focused set of user-level ZCode skills that encode the patterns used by metallic's mature TypeScript Chrome extensions (gemini-utilities, tube-utilities), so new extensions inherit a proven architecture instead of re-deriving it.</p>
+      <p>A focused set of user-level ZCode skills that encode the patterns used by metallic's mature TypeScript Chrome extensions (ai-chat-utilities, tube-utilities), so new extensions inherit a proven architecture instead of re-deriving it.</p>
       <div class="hero-meta">
         <span class="pill">Date · 2026-06-23</span>
         <span class="pill">Status · Approved</span>
@@ -475,7 +475,7 @@
             <tr><td><code>comet-ntp</code></td><td>vanilla JS</td><td>MV3 NTP override + declarativeNetRequest (legacy)</td></tr>
             <tr><td><code>freedium</code></td><td>dual MV2/MV3</td><td>Chrome + Firefox build (legacy)</td></tr>
             <tr><td><code>localhost-dashboard</code></td><td>vanilla JS</td><td>modular <code>src/</code> (legacy)</td></tr>
-            <tr><td><code>gemini-utilities</code> (v2.1)</td><td>TS + esbuild + vitest</td><td><strong>mature canonical pattern</strong></td></tr>
+            <tr><td><code>ai-chat-utilities</code> (v2.1)</td><td>TS + esbuild + vitest</td><td><strong>mature canonical pattern</strong></td></tr>
             <tr><td><code>tube-utilities</code> (v1.0)</td><td>TS + esbuild + vitest</td><td><strong>mature canonical pattern</strong></td></tr>
           </tbody>
         </table>
@@ -489,7 +489,7 @@
       <ul class="decisions">
         <li><strong>Organization:</strong> focused skill set — several small, single-purpose skills that each fire at the right moment, rather than one comprehensive skill.</li>
         <li><strong>Location:</strong> user-level ZCode skills dir <code>C:\Users\soloa\.zcode\skills\</code> (available across projects). This design doc is also committed to the repo's <code>planning/</code> dir as a record.</li>
-        <li><strong>Stack standardized:</strong> TypeScript + esbuild + vitest + <code>@types/chrome</code>, MV3, matching gemini-utilities / tube-utilities. Vanilla-JS extensions are treated as legacy.</li>
+        <li><strong>Stack standardized:</strong> TypeScript + esbuild + vitest + <code>@types/chrome</code>, MV3, matching ai-chat-utilities / tube-utilities. Vanilla-JS extensions are treated as legacy.</li>
         <li><strong>Anatomy:</strong> each skill is a folder with <code>SKILL.md</code> (frontmatter + body) plus optional <code>references/</code>, <code>assets/</code>, <code>scripts/</code> per the skill-creator anatomy. <code>agents/openai.yaml</code> generated via the skill-creator's <code>init_skill.py</code> / <code>generate_openai_yaml.py</code>.</li>
         <li><strong>Leanness:</strong> SKILL.md bodies kept under ~500 lines; detail moved to <code>references/</code>. Descriptions written for precise triggering and to avoid over-firing on general web dev.</li>
       </ul>

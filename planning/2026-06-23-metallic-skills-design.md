@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-23
 **Status:** approved
-**Scope:** A focused set of user-level ZCode skills that encode the patterns used by metallic's mature TypeScript Chrome extensions (gemini-utilities, tube-utilities), so new extensions inherit a proven architecture instead of re-deriving it.
+**Scope:** A focused set of user-level ZCode skills that encode the patterns used by metallic's mature TypeScript Chrome extensions (ai-chat-utilities, tube-utilities), so new extensions inherit a proven architecture instead of re-deriving it.
 
 ## Context
 
@@ -13,7 +13,7 @@ metallic is a Chrome extension forge (GitHub: 051-lab/metallic). It currently ho
 | comet-ntp | vanilla JS | MV3 NTP override + declarativeNetRequest (legacy) |
 | freedium | dual MV2/MV3 | Chrome + Firefox build (legacy) |
 | localhost-dashboard | vanilla JS | modular `src/` (legacy) |
-| gemini-utilities (v2.1) | TS + esbuild + vitest | **mature canonical pattern** |
+| ai-chat-utilities (v2.1) | TS + esbuild + vitest | **mature canonical pattern** |
 | tube-utilities (v1.0) | TS + esbuild + vitest | **mature canonical pattern** |
 
 `shared/` and `templates/` exist but are empty. The two mature extensions already encode a reusable architecture; the skills below codify it.
@@ -22,7 +22,7 @@ metallic is a Chrome extension forge (GitHub: 051-lab/metallic). It currently ho
 
 - **Organization:** focused skill set — several small, single-purpose skills that each fire at the right moment, rather than one comprehensive skill.
 - **Location:** user-level ZCode skills dir `C:\Users\soloa\.zcode\skills\` (available across projects). This design doc is also committed to the repo's `planning/` dir as a record.
-- **Stack standardized:** TypeScript + esbuild + vitest + `@types/chrome`, MV3, matching gemini-utilities / tube-utilities. Vanilla-JS extensions are treated as legacy.
+- **Stack standardized:** TypeScript + esbuild + vitest + `@types/chrome`, MV3, matching ai-chat-utilities / tube-utilities. Vanilla-JS extensions are treated as legacy.
 - **Anatomy:** each skill is a folder with `SKILL.md` (frontmatter + body) plus optional `references/`, `assets/`, `scripts/` per the skill-creator anatomy. `agents/openai.yaml` generated via the skill-creator's `init_skill.py` / `generate_openai_yaml.py`.
 - **Leanness:** SKILL.md bodies kept under ~500 lines; detail moved to `references/`. Descriptions written for precise triggering and to avoid over-firing on general web dev.
 

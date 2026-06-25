@@ -87,9 +87,9 @@ dist
 .output
 
 # AI Chat Utilities tracks its deterministic unpacked-extension bundles.
-!extensions/gemini-utilities/dist/
-!extensions/gemini-utilities/dist/**
-extensions/gemini-utilities/release/
+!extensions/ai-chat-utilities/dist/
+!extensions/ai-chat-utilities/dist/**
+extensions/ai-chat-utilities/release/
 
 # Gatsby files
 .cache/

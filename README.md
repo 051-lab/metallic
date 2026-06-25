@@ -25,7 +25,7 @@
 metallic/
 ├── extensions/
 │   ├── comet-ntp/
-│   ├── gemini-utilities/
+│   ├── ai-chat-utilities/
 │   └── localhost-dashboard/
 ├── shared/            # Reusable utilities and components
 ├── templates/         # Starter templates for new extensions
@@ -55,7 +55,7 @@ Claude, Qwen, and other chatbot pages through guided capture.
 Load unpacked from:
 
 ```text
-extensions/gemini-utilities
+extensions/ai-chat-utilities
 ```
 
 ### Localhost Dashboard
