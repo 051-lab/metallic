@@ -2,7 +2,7 @@
 
 ## Build
 
-From `extensions/gemini-utilities`:
+From `extensions/ai-chat-utilities`:
 
 ```bash
 npm install
@@ -14,7 +14,7 @@ npm run check
 1. Open `chrome://extensions`.
 2. Enable Developer mode.
 3. Click **Load unpacked**.
-4. Select `extensions/gemini-utilities`.
+4. Select `extensions/ai-chat-utilities`.
 
 ## Enable platforms
 
