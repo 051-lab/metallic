@@ -1,5 +1,5 @@
 const STORAGE_KEY = 'workspaceForgeState';
-const STATE_VERSION = 1;
+const STATE_VERSION = 2;
 
 const DEFAULT_STATE = {
   version: STATE_VERSION,
@@ -56,12 +56,16 @@ async function handleMessage(message, sender) {
   switch (message?.type) {
     case 'GET_STATE':
       return ensureState();
+    case 'IMPORT_STATE':
+      return importState(message.payload || {});
     case 'OPEN_SIDE_PANEL':
       return openSidePanel(message.windowId);
     case 'CREATE_WORKSPACE':
       return createWorkspace(message.payload || {});
     case 'UPDATE_WORKSPACE':
       return updateWorkspace(message.workspaceId, message.patch || {});
+    case 'UPDATE_WORKSPACE_FROM_CURRENT_WINDOW':
+      return updateWorkspaceFromCurrentWindow(message.workspaceId, message.payload || {});
     case 'DELETE_WORKSPACE':
       return deleteWorkspace(message.workspaceId);
     case 'SAVE_CURRENT_WINDOW':
@@ -123,8 +127,8 @@ function normalizeWorkspace(workspace) {
     nextAction: workspace.nextAction || '',
     createdAt: workspace.createdAt || now,
     updatedAt: workspace.updatedAt || now,
-    tabs: Array.isArray(workspace.tabs) ? workspace.tabs.map(normalizeSavedTab) : [],
-    tasks: Array.isArray(workspace.tasks) ? workspace.tasks.map(normalizeTask) : []
+    tabs: Array.isArray(workspace.tabs) ? workspace.tabs.map(normalizeSavedTab).filter(tab => tab.url) : [],
+    tasks: Array.isArray(workspace.tasks) ? workspace.tasks.map(normalizeTask).filter(task => task.text) : []
   };
 }
 
@@ -143,9 +147,9 @@ function normalizeSavedTab(tab) {
 function normalizeTask(task) {
   return {
     id: task.id || createId('task'),
-    text: task.text || '',
-    done: Boolean(task.done),
-    createdAt: task.createdAt || Date.now()
+    text: typeof task === 'string' ? task : task.text || '',
+    done: typeof task === 'object' ? Boolean(task.done) : false,
+    createdAt: typeof task === 'object' && task.createdAt ? task.createdAt : Date.now()
   };
 }
 
@@ -160,6 +164,36 @@ async function openSidePanel(windowId) {
   return { windowId: targetWindowId };
 }
 
+async function importState(payload) {
+  const incoming = payload.state || payload;
+  const mergeMode = payload.mode || 'merge';
+  const incomingWorkspaces = Array.isArray(incoming?.workspaces)
+    ? incoming.workspaces
+    : Array.isArray(incoming)
+      ? incoming
+      : [];
+
+  if (!incomingWorkspaces.length) {
+    throw new Error('Import file does not contain any workspaces.');
+  }
+
+  const state = mergeMode === 'replace' ? structuredClone(DEFAULT_STATE) : await ensureState();
+  const existingIds = new Set(state.workspaces.map(workspace => workspace.id));
+  const imported = incomingWorkspaces.map(workspace => {
+    const normalized = normalizeWorkspace(workspace);
+    if (existingIds.has(normalized.id)) {
+      normalized.id = createId('workspace');
+    }
+    existingIds.add(normalized.id);
+    normalized.updatedAt = Date.now();
+    return normalized;
+  });
+
+  state.workspaces = [...imported, ...state.workspaces];
+  state.activeWorkspaceId = imported[0]?.id || state.activeWorkspaceId || null;
+  return saveState(state);
+}
+
 async function createWorkspace(payload) {
   const state = await ensureState();
   const now = Date.now();
@@ -171,8 +205,8 @@ async function createWorkspace(payload) {
     nextAction: payload.nextAction || '',
     createdAt: now,
     updatedAt: now,
-    tabs: [],
-    tasks: []
+    tabs: Array.isArray(payload.tabs) ? payload.tabs : [],
+    tasks: Array.isArray(payload.tasks) ? payload.tasks : []
   });
 
   state.workspaces.unshift(workspace);
@@ -188,10 +222,40 @@ async function updateWorkspace(workspaceId, patch) {
     ...patch,
     id: workspace.id,
     updatedAt: Date.now(),
-    tabs: Array.isArray(patch.tabs) ? patch.tabs.map(normalizeSavedTab) : workspace.tabs,
-    tasks: Array.isArray(patch.tasks) ? patch.tasks.map(normalizeTask) : workspace.tasks
+    tabs: Array.isArray(patch.tabs) ? patch.tabs.map(normalizeSavedTab).filter(tab => tab.url) : workspace.tabs,
+    tasks: Array.isArray(patch.tasks) ? patch.tasks.map(normalizeTask).filter(task => task.text) : workspace.tasks
   });
 
+  return saveState(state);
+}
+
+async function updateWorkspaceFromCurrentWindow(workspaceId, payload) {
+  const state = await ensureState();
+  const workspace = getWorkspaceOrThrow(state, workspaceId || state.activeWorkspaceId);
+  const tabs = await chrome.tabs.query({ currentWindow: true });
+  const currentTabs = tabs.filter(isSavableTab).map(tabToSavedTab);
+
+  if (!currentTabs.length) {
+    throw new Error('No savable tabs were found in the current window.');
+  }
+
+  const mode = payload.mode || 'replace';
+
+  if (mode === 'merge') {
+    const existingUrls = new Set(workspace.tabs.map(tab => normalizeUrl(tab.url)));
+    for (const tab of currentTabs) {
+      const normalizedUrl = normalizeUrl(tab.url);
+      if (!existingUrls.has(normalizedUrl)) {
+        workspace.tabs.push(tab);
+        existingUrls.add(normalizedUrl);
+      }
+    }
+  } else {
+    workspace.tabs = currentTabs;
+  }
+
+  workspace.updatedAt = Date.now();
+  state.activeWorkspaceId = workspace.id;
   return saveState(state);
 }
 
@@ -221,26 +285,24 @@ async function saveCurrentWindow(payload) {
   }
 
   const now = Date.now();
+  const existingWorkspace = payload.workspaceId
+    ? state.workspaces.find(item => item.id === payload.workspaceId)
+    : null;
   const workspace = normalizeWorkspace({
     id: payload.workspaceId || createId('workspace'),
-    name: cleanName(payload.name, `Workspace ${state.workspaces.length + 1}`),
-    color: payload.color || 'silver',
-    notes: payload.notes || '',
-    nextAction: payload.nextAction || '',
-    createdAt: now,
+    name: cleanName(payload.name, existingWorkspace?.name || `Workspace ${state.workspaces.length + 1}`),
+    color: payload.color || existingWorkspace?.color || 'silver',
+    notes: payload.notes ?? existingWorkspace?.notes ?? '',
+    nextAction: payload.nextAction ?? existingWorkspace?.nextAction ?? '',
+    createdAt: existingWorkspace?.createdAt || now,
     updatedAt: now,
     tabs: savableTabs,
-    tasks: []
+    tasks: Array.isArray(payload.tasks) ? payload.tasks : existingWorkspace?.tasks || []
   });
 
   const existingIndex = state.workspaces.findIndex(item => item.id === workspace.id);
   if (existingIndex >= 0) {
-    state.workspaces[existingIndex] = {
-      ...state.workspaces[existingIndex],
-      ...workspace,
-      createdAt: state.workspaces[existingIndex].createdAt,
-      updatedAt: now
-    };
+    state.workspaces[existingIndex] = workspace;
   } else {
     state.workspaces.unshift(workspace);
   }
