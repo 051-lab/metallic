@@ -486,10 +486,10 @@
         </header>
 
         <section class="stats" aria-label="Idea statistics">
-          <div class="stat"><strong id="totalStat">19</strong><span>Total ideas</span></div>
-          <div class="stat"><strong id="nextStat">4</strong><span>Marked next</span></div>
+          <div class="stat"><strong id="totalStat">22</strong><span>Total ideas</span></div>
+          <div class="stat"><strong id="nextStat">5</strong><span>Marked next</span></div>
           <div class="stat"><strong id="buildingStat">0</strong><span>In development</span></div>
-          <div class="stat"><strong id="avgStat">76</strong><span>Average score</span></div>
+          <div class="stat"><strong id="avgStat">77</strong><span>Average score</span></div>
         </section>
 
         <section id="ideaList" class="idea-list" aria-live="polite"></section>
@@ -838,7 +838,53 @@
             notes: "Daily addition for 2026-06-27. Distinct from Live Debug Twin: this focuses on cross-tab state comparison rather than general bug capsules.",
             createdAt: "2026-06-27T00:00:00.000Z",
             updatedAt: "2026-06-27T00:00:00.000Z"
+          },
+          {
+            id: "consent-governor",
+            name: "Consent Governor",
+            category: "Privacy & Safety",
+            status: "next",
+            problem: "Users cannot tell when an AI agent, SaaS workflow, or embedded iframe is about to cross a consent boundary with identity, money, personal data, or permissions. The risky moment is hidden inside normal browser interactions.",
+            solution: "A Side Panel consent layer that watches form submits, permission prompts, OAuth redirects, file uploads, and agent-driven clicks, then requires explicit approval when actions cross user-defined risk contracts.",
+            audience: "AI power users, operators, freelancers, and teams experimenting with browser agents.",
+            differentiator: "A normal web app cannot supervise cross-site browser actions, permission prompts, redirects, and tab-level state at the moment consent is required.",
+            tags: ["agentic automation", "permissions", "side panel", "guardrails"],
+            impact: 10, excitement: 10, confidence: 8, effort: 8,
+            notes: "Daily addition for 2026-06-28. Needs careful UX so guardrails feel protective rather than interruptive.",
+            createdAt: "2026-06-28T00:00:00.000Z",
+            updatedAt: "2026-06-28T00:00:00.000Z"
+          },
+          {
+            id: "tab-causality-engine",
+            name: "Tab Causality Engine",
+            category: "Productivity",
+            status: "inbox",
+            problem: "Users lose why each tab exists after a research or build session branches through searches, docs, AI chats, tickets, and downloads. Browser history preserves chronology but not intent or causal links.",
+            solution: "A Manifest V3 service worker builds a local causality graph from tab openers, navigation transitions, tab groups, selections, downloads, and pinned milestones, then summarizes the workspace in the Side Panel.",
+            audience: "Researchers, developers, founders, students, and creators who work through complex multi-tab investigations.",
+            differentiator: "A normal web app cannot observe opener relationships, tab groups, browser-level navigation events, and cross-site workflow transitions.",
+            tags: ["tab graph", "service worker", "workspace memory", "side panel"],
+            impact: 9, excitement: 9, confidence: 8, effort: 7,
+            notes: "Daily addition for 2026-06-28. Requires strong local-only defaults and clear controls for what events are captured.",
+            createdAt: "2026-06-28T00:00:00.000Z",
+            updatedAt: "2026-06-28T00:00:00.000Z"
+          },
+          {
+            id: "fixture-foundry",
+            name: "Fixture Foundry",
+            category: "Developer Tools",
+            status: "inbox",
+            problem: "Developers debugging web apps struggle to recreate the exact browser state that triggered a bug across storage, cookies, URL params, feature flags, network timing, and DOM conditions. Test fixtures are usually written after the evidence has already disappeared.",
+            solution: "A debugger-assisted extension captures user-approved runtime state from a live tab and converts it into replayable Playwright-style fixtures, storage seeds, mocked network traces, and a reproduction brief.",
+            audience: "Frontend developers, QA engineers, support engineers, and technical founders debugging stateful SaaS products.",
+            differentiator: "A normal web app cannot inspect and package browser runtime state across DevTools-level signals, storage, DOM snapshots, and network context.",
+            tags: ["debugger", "fixtures", "Playwright", "runtime state"],
+            impact: 9, excitement: 8, confidence: 8, effort: 6,
+            notes: "Daily addition for 2026-06-28. Needs strict redaction for cookies, tokens, and customer data before fixture export.",
+            createdAt: "2026-06-28T00:00:00.000Z",
+            updatedAt: "2026-06-28T00:00:00.000Z"
           }
+
       ];
 
       const state = {
