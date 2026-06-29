@@ -91,7 +91,8 @@ h2 {
 
 .toolbar,
 .quick-actions,
-.editor-actions {
+.editor-actions,
+.template-controls {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
@@ -148,6 +149,26 @@ h2 {
 .notice.error {
   border-color: rgba(255, 107, 122, 0.4);
   background: var(--danger-bg);
+}
+
+.template-panel {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: rgba(18, 22, 33, 0.72);
+}
+
+.template-select {
+  flex: 1 1 190px;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  outline: none;
+  padding: 9px 12px;
 }
 
 .workspace-layout {
