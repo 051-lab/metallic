@@ -1,11 +1,16 @@
 let state = null;
 let selectedWorkspaceId = null;
 
+const workspaceTemplates = Array.isArray(globalThis.WORKSPACE_TEMPLATES) ? globalThis.WORKSPACE_TEMPLATES : [];
+
 const elements = {
   notice: document.querySelector('#notice'),
   saveWindow: document.querySelector('#save-window'),
   createWorkspace: document.querySelector('#create-workspace'),
   refreshState: document.querySelector('#refresh-state'),
+  templateSelect: document.querySelector('#template-select'),
+  createFromTemplate: document.querySelector('#create-from-template'),
+  exportWorkspaces: document.querySelector('#export-workspaces'),
   workspaceCount: document.querySelector('#workspace-count'),
   workspaceList: document.querySelector('#workspace-list'),
   workspaceDetail: document.querySelector('#workspace-detail'),
@@ -18,8 +23,11 @@ document.addEventListener('DOMContentLoaded', init);
 elements.saveWindow.addEventListener('click', saveCurrentWindowAsWorkspace);
 elements.createWorkspace.addEventListener('click', createWorkspace);
 elements.refreshState.addEventListener('click', refresh);
+elements.createFromTemplate.addEventListener('click', createWorkspaceFromTemplate);
+elements.exportWorkspaces.addEventListener('click', () => showNotice('JSON export UI is reserved for the next pass.'));
 
 async function init() {
+  renderTemplateOptions();
   await refresh();
 }
 
@@ -34,6 +42,17 @@ async function refresh() {
 function render() {
   renderWorkspaceList();
   renderWorkspaceDetail();
+}
+
+function renderTemplateOptions() {
+  if (!elements.templateSelect) return;
+
+  for (const template of workspaceTemplates) {
+    const option = document.createElement('option');
+    option.value = template.id;
+    option.textContent = template.name;
+    elements.templateSelect.append(option);
+  }
 }
 
 function renderWorkspaceList() {
@@ -96,6 +115,7 @@ function renderWorkspaceDetail() {
   const notesInput = fragment.querySelector('#workspace-notes');
   const openButton = fragment.querySelector('#open-workspace');
   const addTabButton = fragment.querySelector('#add-current-tab');
+  const replaceTabsButton = fragment.querySelector('#replace-tabs-from-window');
   const closeTabsButton = fragment.querySelector('#close-workspace-tabs');
   const saveDetailsButton = fragment.querySelector('#save-workspace-details');
   const deleteButton = fragment.querySelector('#delete-workspace');
@@ -116,6 +136,7 @@ function renderWorkspaceDetail() {
 
   openButton.addEventListener('click', () => openWorkspace(workspace.id));
   addTabButton.addEventListener('click', () => addCurrentTab(workspace.id));
+  replaceTabsButton.addEventListener('click', () => replaceTabsFromCurrentWindow(workspace.id));
   closeTabsButton.addEventListener('click', () => closeWorkspaceTabs(workspace.id));
   saveDetailsButton.addEventListener('click', () => saveWorkspaceDetails(workspace.id, {
     name: nameInput.value,
@@ -261,6 +282,33 @@ async function createWorkspace() {
   });
 }
 
+async function createWorkspaceFromTemplate() {
+  const templateId = elements.templateSelect.value;
+  const template = workspaceTemplates.find(item => item.id === templateId);
+
+  if (!template) {
+    showNotice('Choose a workspace template first.', true);
+    return;
+  }
+
+  await runAction(async () => {
+    state = await sendMessage({
+      type: 'CREATE_WORKSPACE',
+      payload: {
+        name: template.name,
+        color: template.color,
+        notes: template.notes,
+        nextAction: template.nextAction,
+        tasks: template.tasks.map(text => ({ text, done: false }))
+      }
+    });
+    selectedWorkspaceId = state.activeWorkspaceId;
+    elements.templateSelect.value = '';
+    render();
+    showNotice(`Created ${template.name} from a template.`);
+  });
+}
+
 async function saveWorkspaceDetails(workspaceId, formData) {
   await runAction(async () => {
     state = await sendMessage({
@@ -291,6 +339,26 @@ async function addCurrentTab(workspaceId) {
     state = await sendMessage({ type: 'ADD_CURRENT_TAB', workspaceId });
     render();
     showNotice('Active tab added to workspace.');
+  });
+}
+
+async function replaceTabsFromCurrentWindow(workspaceId) {
+  const workspace = findWorkspace(workspaceId);
+  if (!workspace) return;
+
+  const message = `Replace the saved tabs in "${workspace.name}" with the tabs in your current browser window? Notes and tasks will be preserved.`;
+  if (!confirm(message)) return;
+
+  await runAction(async () => {
+    state = await sendMessage({
+      type: 'UPDATE_WORKSPACE_FROM_CURRENT_WINDOW',
+      workspaceId,
+      payload: { mode: 'replace' }
+    });
+    render();
+    const updated = findWorkspace(workspaceId);
+    const count = updated?.tabs.length || 0;
+    showNotice(`Replaced saved tabs with ${count} current-window tab${count === 1 ? '' : 's'}.`);
   });
 }
 
