@@ -19,8 +19,12 @@ async function refreshSummary() {
 
 async function openPanel() {
   await runAction(async () => {
+    if (!chrome.sidePanel?.open) {
+      throw new Error('Chrome Side Panel API is not available in this browser.');
+    }
+
     const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    await sendMessage({ type: 'OPEN_SIDE_PANEL', windowId: activeTab?.windowId });
+    await chrome.sidePanel.open({ windowId: activeTab?.windowId });
     window.close();
   });
 }
