@@ -20,6 +20,20 @@
         <button id="refresh-state" class="button ghost" type="button">Refresh</button>
       </section>
 
+      <section class="template-panel" aria-label="Workspace templates">
+        <div>
+          <p class="eyebrow">Templates</p>
+          <h2>Start from a workflow</h2>
+        </div>
+        <div class="template-controls">
+          <select id="template-select" class="template-select" aria-label="Choose workspace template">
+            <option value="">Choose a template...</option>
+          </select>
+          <button id="create-from-template" class="button" type="button">Create</button>
+          <button id="export-workspaces" class="button ghost" type="button">Export JSON</button>
+        </div>
+      </section>
+
       <section id="notice" class="notice" hidden></section>
 
       <section class="workspace-layout">
@@ -74,6 +88,7 @@
         <div class="quick-actions">
           <button id="open-workspace" class="button primary" type="button">Open Workspace</button>
           <button id="add-current-tab" class="button" type="button">Add Current Tab</button>
+          <button id="replace-tabs-from-window" class="button" type="button">Replace Tabs from Window</button>
           <button id="close-workspace-tabs" class="button danger-soft" type="button">Close Workspace Tabs</button>
         </div>
 
@@ -114,6 +129,7 @@
       </article>
     </template>
 
+    <script src="workspaceTemplates.js"></script>
     <script src="sidepanel.js"></script>
   </body>
 </html>
