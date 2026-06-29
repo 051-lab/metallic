@@ -486,10 +486,10 @@
         </header>
 
         <section class="stats" aria-label="Idea statistics">
-          <div class="stat"><strong id="totalStat">22</strong><span>Total ideas</span></div>
-          <div class="stat"><strong id="nextStat">5</strong><span>Marked next</span></div>
+          <div class="stat"><strong id="totalStat">25</strong><span>Total ideas</span></div>
+          <div class="stat"><strong id="nextStat">6</strong><span>Marked next</span></div>
           <div class="stat"><strong id="buildingStat">0</strong><span>In development</span></div>
-          <div class="stat"><strong id="avgStat">77</strong><span>Average score</span></div>
+          <div class="stat"><strong id="avgStat">78</strong><span>Average score</span></div>
         </section>
 
         <section id="ideaList" class="idea-list" aria-live="polite"></section>
@@ -883,8 +883,52 @@
             notes: "Daily addition for 2026-06-28. Needs strict redaction for cookies, tokens, and customer data before fixture export.",
             createdAt: "2026-06-28T00:00:00.000Z",
             updatedAt: "2026-06-28T00:00:00.000Z"
+          },
+          {
+            id: "prompt-airlock",
+            name: "Prompt Airlock",
+            category: "Privacy & Safety",
+            status: "next",
+            problem: "Users paste sensitive project context, credentials, private messages, and client data into AI tools before they realize what crossed the boundary. The pain is catching risky prompt payloads at the browser edge, not after submission.",
+            solution: "A Manifest V3 outbound prompt firewall that watches paste, drag-drop, file upload, and submit events in AI tabs, classifies risk locally with Chrome built-in AI/Gemini Nano where available, and routes questionable payloads into a Side Panel redaction queue before anything leaves the browser.",
+            audience: "AI power users, freelancers, support workers, founders, and operators moving private context between SaaS tools and AI chats.",
+            differentiator: "A normal web app cannot intercept cross-site paste, upload, and submit flows across arbitrary AI tools at the browser boundary.",
+            tags: ["local AI", "privacy", "side panel", "prompt safety"],
+            impact: 10, excitement: 10, confidence: 8, effort: 7,
+            notes: "Daily addition for 2026-06-29. Needs careful allowlist UX and transparent local-only defaults.",
+            createdAt: "2026-06-29T00:00:00.000Z",
+            updatedAt: "2026-06-29T00:00:00.000Z"
+          },
+          {
+            id: "origin-twin",
+            name: "Origin Twin",
+            category: "Research",
+            status: "inbox",
+            problem: "Users cannot prove where a claim came from after a browser research session has moved through searches, source pages, AI summaries, screenshots, and copied excerpts. The pain is losing source lineage while the work still feels fresh.",
+            solution: "A research Side Panel that binds claims, highlights, screenshots, DOM snapshots, source metadata, and AI-generated summaries into a local provenance graph using offscreen documents for capture normalization and chrome.storage for project-level evidence trails.",
+            audience: "Researchers, students, analysts, journalists, builders, and anyone producing high-trust browser-based research.",
+            differentiator: "A normal web app only receives pasted fragments; an extension can preserve source context, tab lineage, selected DOM regions, and browser-native capture metadata.",
+            tags: ["provenance", "research", "offscreen", "citations"],
+            impact: 9, excitement: 9, confidence: 8, effort: 6,
+            notes: "Daily addition for 2026-06-29. Should avoid storing copyrighted page bodies by default; preserve excerpts and metadata instead.",
+            createdAt: "2026-06-29T00:00:00.000Z",
+            updatedAt: "2026-06-29T00:00:00.000Z"
+          },
+          {
+            id: "runtime-negotiator",
+            name: "Runtime Negotiator",
+            category: "Developer Tools",
+            status: "inbox",
+            problem: "Developers lose time when a web app behaves differently across accounts, flags, environments, or tabs but the browser gives them scattered clues instead of a coherent diagnosis. The pain is connecting runtime state, network behavior, storage, and DOM symptoms fast enough to reproduce the bug.",
+            solution: "A debugger-assisted Side Panel that compares two live tabs, captures user-approved storage and network deltas, fingerprints DOM differences through an offscreen document, and generates a replay brief with suspected state mismatches and fixture seeds.",
+            audience: "Frontend developers, QA engineers, support engineers, and founders debugging complex browser apps.",
+            differentiator: "A normal web app cannot inspect cross-tab runtime state, DevTools-level signals, storage differences, and browser navigation context together.",
+            tags: ["debugger", "state diff", "QA", "fixtures"],
+            impact: 9, excitement: 8, confidence: 8, effort: 7,
+            notes: "Daily addition for 2026-06-29. Requires strict redaction for cookies, tokens, and customer data before export.",
+            createdAt: "2026-06-29T00:00:00.000Z",
+            updatedAt: "2026-06-29T00:00:00.000Z"
           }
-
       ];
 
       const state = {
