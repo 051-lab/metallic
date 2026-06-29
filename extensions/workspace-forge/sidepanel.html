@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Workspace Forge</title>
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="hero">
+        <p class="eyebrow">Metallic</p>
+        <h1>Workspace Forge</h1>
+        <p class="hero-copy">Save project windows, restore focused browser sessions, and keep next actions attached to the tabs that matter.</p>
+      </header>
+
+      <section class="toolbar" aria-label="Workspace actions">
+        <button id="save-window" class="button primary" type="button">Save Current Window</button>
+        <button id="create-workspace" class="button" type="button">New Workspace</button>
+        <button id="refresh-state" class="button ghost" type="button">Refresh</button>
+      </section>
+
+      <section id="notice" class="notice" hidden></section>
+
+      <section class="workspace-layout">
+        <aside class="workspace-list-panel" aria-label="Saved workspaces">
+          <div class="section-heading">
+            <h2>Workspaces</h2>
+            <span id="workspace-count" class="count-pill">0</span>
+          </div>
+          <div id="workspace-list" class="workspace-list"></div>
+        </aside>
+
+        <section id="workspace-detail" class="workspace-detail" aria-live="polite">
+          <div class="empty-state">
+            <h2>No workspace selected</h2>
+            <p>Create a workspace or save your current window to begin.</p>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <template id="workspace-card-template">
+      <button class="workspace-card" type="button">
+        <span class="workspace-card__stripe"></span>
+        <span class="workspace-card__body">
+          <strong class="workspace-card__name"></strong>
+          <span class="workspace-card__meta"></span>
+        </span>
+      </button>
+    </template>
+
+    <template id="workspace-detail-template">
+      <article class="workspace-editor">
+        <div class="editor-topline">
+          <div>
+            <p class="eyebrow">Active Workspace</p>
+            <input id="workspace-name" class="title-input" type="text" aria-label="Workspace name" />
+          </div>
+          <select id="workspace-color" class="color-select" aria-label="Workspace color">
+            <option value="silver">Silver</option>
+            <option value="slate">Slate</option>
+            <option value="blue">Blue</option>
+            <option value="cyan">Cyan</option>
+            <option value="green">Green</option>
+            <option value="yellow">Yellow</option>
+            <option value="orange">Orange</option>
+            <option value="red">Red</option>
+            <option value="pink">Pink</option>
+            <option value="purple">Purple</option>
+          </select>
+        </div>
+
+        <div class="quick-actions">
+          <button id="open-workspace" class="button primary" type="button">Open Workspace</button>
+          <button id="add-current-tab" class="button" type="button">Add Current Tab</button>
+          <button id="close-workspace-tabs" class="button danger-soft" type="button">Close Workspace Tabs</button>
+        </div>
+
+        <label class="field">
+          <span>Next action</span>
+          <input id="workspace-next-action" type="text" placeholder="What should happen next?" />
+        </label>
+
+        <label class="field">
+          <span>Notes</span>
+          <textarea id="workspace-notes" rows="5" placeholder="Project context, important links, reminders, or decisions..."></textarea>
+        </label>
+
+        <div class="editor-actions">
+          <button id="save-workspace-details" class="button primary" type="button">Save Details</button>
+          <button id="delete-workspace" class="button danger" type="button">Delete</button>
+        </div>
+
+        <section class="tabs-section">
+          <div class="section-heading">
+            <h2>Saved Tabs</h2>
+            <span id="tab-count" class="count-pill">0</span>
+          </div>
+          <div id="saved-tabs" class="saved-tabs"></div>
+        </section>
+
+        <section class="tasks-section">
+          <div class="section-heading">
+            <h2>Tasks</h2>
+            <span id="task-count" class="count-pill">0</span>
+          </div>
+          <form id="task-form" class="task-form">
+            <input id="task-input" type="text" placeholder="Add a task for this workspace" />
+            <button class="button" type="submit">Add</button>
+          </form>
+          <div id="task-list" class="task-list"></div>
+        </section>
+      </article>
+    </template>
+
+    <script src="sidepanel.js"></script>
+  </body>
+</html>
