@@ -7,7 +7,9 @@ It is designed for workflows where research, AI tools, GitHub, local dev servers
 ## MVP Features
 
 - Create named project workspaces.
+- Create starter workspaces from workflow templates.
 - Save the current Chrome window as a workspace.
+- Replace the selected workspace's saved tabs from the current window while preserving notes and tasks.
 - Add the active tab to the selected workspace.
 - Restore a workspace in a fresh Chrome window.
 - Group restored tabs with Chrome tab groups.
@@ -16,6 +18,14 @@ It is designed for workflows where research, AI tools, GitHub, local dev servers
 - Add, complete, and delete workspace tasks.
 - Close open tabs that match a saved workspace.
 - Use a popup for quick capture and a side panel for full workspace management.
+
+## Included Templates
+
+- Chrome Extension Dev
+- AI Research Sprint
+- App Build Session
+- Sound Design Lab
+- Job Search Command Center
 
 ## Load Unpacked
 
@@ -34,9 +44,17 @@ extensions/workspace-forge
 
 Open a window with tabs related to a project, click the Workspace Forge icon, then choose **Save Current Window**.
 
+### Start from a template
+
+Open the side panel, choose a workflow template, and click **Create**. Workspace Forge creates a named workspace with starter notes, a next action, and starter tasks.
+
 ### Manage the workspace
 
 Open the side panel to rename the workspace, change its color, add notes, define a next action, manage saved tabs, and add tasks.
+
+### Replace saved tabs
+
+Use **Replace Tabs from Window** when a workspace already exists but the current browser window has become the new source of truth. Notes and tasks are preserved.
 
 ### Restore focus
 
@@ -61,7 +79,6 @@ The extension intentionally provides workspace/session organization, not full Ch
 
 ## Next Roadmap
 
-- Workspace templates for coding, research, AI workflows, job search, and media learning.
 - Workspace snapshots and restore history.
 - Command palette for fast workspace switching.
 - Tab inbox for unsorted tabs.
