@@ -149,3 +149,9 @@ extensions/ai-chat-utilities/release/
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Qoder IDE
+.qoder/
+
+# Windows Zone.Identifier artifacts
+*:Zone.Identifier
