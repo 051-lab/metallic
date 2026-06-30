@@ -47,13 +47,16 @@ export function showOverlay(
   const shadow = host.attachShadow({ mode: "open" });
   const warning = snapshot?.warnings[0];
   const canCalibrate = adapter.id === "generic" || adapter.id.startsWith("profile:");
+  const hasMessages = Boolean(snapshot?.messages.length);
   shadow.innerHTML = `<style>${STYLE}</style><div class="backdrop"><section class="panel" role="dialog" aria-modal="true">
     <header><div><div class="eyebrow">${escapeHtml(adapter.displayName)}</div><h2>AI Chat Utilities</h2>
-      <p>${snapshot ? `${snapshot.messages.length} messages · ${escapeHtml(snapshot.title)}` : "No conversation detected yet."}</p></div>
+      <p>${hasMessages ? `${snapshot!.messages.length} messages · ${escapeHtml(snapshot!.title)}` : "No conversation detected yet."}</p></div>
       <button class="close" aria-label="Close">×</button></header>
-    <div class="status ${warning ? "warning" : ""}">${warning ? escapeHtml(warning) :
-      `Conversation ready · ${Math.round((detection?.confidence || 1) * 100)}% extraction confidence.`}</div>
-    ${snapshot ? `<div class="preview">${snapshot.messages.slice(0, 6).map((message) =>
+    <div class="status ${warning || !hasMessages ? "warning" : ""}">${warning ? escapeHtml(warning) :
+      hasMessages
+        ? `Conversation ready · ${Math.round((detection?.confidence || 1) * 100)}% extraction confidence.`
+        : `No messages captured · ${Math.round((detection?.confidence || 0) * 100)}% extraction confidence.`}</div>
+    ${hasMessages ? `<div class="preview">${snapshot!.messages.slice(0, 6).map((message) =>
       `<div class="message"><b>${message.role}</b><span></span></div>`).join("")}</div>` : ""}
     <div class="grid">
       <button class="action primary" data-action="markdown"><strong>Download Markdown</strong><span>Structured, portable conversation export.</span></button>

@@ -292,6 +292,33 @@
       text-transform: uppercase;
     }
 
+    .date-tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      padding: 3px 7px;
+      border: 0;
+      border-radius: 5px;
+      color: var(--muted);
+      font: 10px/1 var(--mono);
+      letter-spacing: .04em;
+    }
+
+    .detail-date-info {
+      display: flex;
+      gap: 18px;
+      padding: 10px 12px;
+      margin-bottom: 17px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255,255,255,.015);
+      color: var(--muted);
+      font: 11px/1.4 var(--mono);
+    }
+
+    .detail-date-info span { white-space: nowrap; }
+    .detail-date-info strong { color: var(--steel); font-weight: 600; }
+
     .status-next { border-color: rgba(121,181,255,.42); color: var(--signal); background: var(--signal-soft); }
     .status-building { border-color: rgba(239,189,114,.4); color: var(--warning); }
     .status-shipped { border-color: rgba(114,215,163,.4); color: var(--success); }
@@ -478,6 +505,7 @@
           <label class="sort-wrap">Sort
             <select id="sortSelect">
               <option value="score">Opportunity score</option>
+              <option value="created">Date added</option>
               <option value="updated">Recently updated</option>
               <option value="name">Name</option>
               <option value="effort">Lowest effort</option>
@@ -486,7 +514,7 @@
         </header>
 
         <section class="stats" aria-label="Idea statistics">
-          <div class="stat"><strong id="totalStat">25</strong><span>Total ideas</span></div>
+          <div class="stat"><strong id="totalStat">28</strong><span>Total ideas</span></div>
           <div class="stat"><strong id="nextStat">6</strong><span>Marked next</span></div>
           <div class="stat"><strong id="buildingStat">0</strong><span>In development</span></div>
           <div class="stat"><strong id="avgStat">78</strong><span>Average score</span></div>
@@ -928,6 +956,51 @@
             notes: "Daily addition for 2026-06-29. Requires strict redaction for cookies, tokens, and customer data before export.",
             createdAt: "2026-06-29T00:00:00.000Z",
             updatedAt: "2026-06-29T00:00:00.000Z"
+          },
+          {
+            id: "tab-finder",
+            name: "Tab Finder",
+            category: "Productivity",
+            status: "next",
+            problem: "When dozens of tabs are spread across several browser windows, finding and switching to the right one means clicking through each window manually. Browser-native tab search is limited to the current window and lacks grouping or domain awareness.",
+            solution: "A lightweight popup that lists every open tab across all windows with fuzzy search, groups them by window and domain, shows favicons and page titles, and lets you jump to any tab with a single click or keyboard shortcut.",
+            audience: "Power users, developers, researchers, and anyone running many tabs across multiple browser windows simultaneously.",
+            differentiator: "Cross-window tab visibility with instant search and domain grouping in a minimal popup, without the overhead of a full dashboard or session manager.",
+            tags: ["tabs", "search", "navigation"],
+            impact: 8, excitement: 7, confidence: 9, effort: 3,
+            notes: "Strong MVP candidate. Simple to build with chrome.tabs.query and chrome.windows.getAll. Could later grow into the Tab Dashboard concept.",
+            createdAt: "2026-06-29T00:00:00.000Z",
+            updatedAt: "2026-06-29T00:00:00.000Z"
+          },
+          {
+            id: "tab-session-saver",
+            name: "Tab Session Saver",
+            category: "Productivity",
+            status: "parked",
+            problem: "Context-switching between projects means closing and reopening groups of tabs, but browser session restore is all-or-nothing and loses the intent behind each tab grouping. Users manually reassemble the same tab sets repeatedly.",
+            solution: "Save named sessions of grouped tabs with optional notes and labels, then restore any session on demand. Sessions persist across browser restarts and can be edited, renamed, or pruned without reopening every tab.",
+            audience: "Developers, researchers, students, and knowledge workers who juggle multiple active projects in the browser.",
+            differentiator: "Project-aware session snapshots with notes and labels, not just a list of URLs. Restores mental context alongside browser state.",
+            tags: ["sessions", "tabs", "workspaces"],
+            impact: 8, excitement: 7, confidence: 8, effort: 5,
+            notes: "Complements Tab Finder. Could share the same chrome.storage schema. Parked until the simpler Tab Finder proves the tab management UX.",
+            createdAt: "2026-06-29T00:00:00.000Z",
+            updatedAt: "2026-06-29T00:00:00.000Z"
+          },
+          {
+            id: "tab-dashboard",
+            name: "Tab Dashboard",
+            category: "Productivity",
+            status: "parked",
+            problem: "Managing a heavy tab load requires multiple separate tools: one to search tabs, another to save sessions, another to close duplicates, and no single view of what is open across all windows. The friction of switching between tab tools defeats the productivity gain.",
+            solution: "A full-page dashboard combining tab search, window/domain grouping, session save/restore, duplicate detection and closing, bulk mute/pin, badge counts, and a keyboard-driven command palette for tab operations.",
+            audience: "Power users, developers, and researchers running 50+ tabs who need a unified command center for tab management.",
+            differentiator: "One extension replaces several single-purpose tab tools. The dashboard view gives a bird's-eye perspective no popup can match.",
+            tags: ["tabs", "dashboard", "management"],
+            impact: 9, excitement: 8, confidence: 7, effort: 7,
+            notes: "The feature-rich evolution of Tab Finder and Tab Session Saver. Parked until the MVP validates the core tab navigation UX. Risk of scope creep — ship the simple version first.",
+            createdAt: "2026-06-29T00:00:00.000Z",
+            updatedAt: "2026-06-29T00:00:00.000Z"
           }
       ];
 
@@ -998,6 +1071,7 @@
         return filtered.sort((a, b) => {
           if (state.sort === "name") return a.name.localeCompare(b.name);
           if (state.sort === "effort") return a.effort - b.effort || opportunityScore(b) - opportunityScore(a);
+          if (state.sort === "created") return new Date(b.createdAt) - new Date(a.createdAt);
           if (state.sort === "updated") return new Date(b.updatedAt) - new Date(a.updatedAt);
           return opportunityScore(b) - opportunityScore(a);
         });
@@ -1076,6 +1150,7 @@
                 <span class="status status-${idea.status}">${escapeHtml(STATUS[idea.status]?.label || idea.status)}</span>
                 <span class="tag">${escapeHtml(idea.category)}</span>
                 ${(idea.tags || []).slice(0, 2).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}
+                <span class="date-tag" title="Added ${escapeAttribute(formatDateFull(idea.createdAt))}">${escapeHtml(formatDate(idea.createdAt))}</span>
               </span>
             </span>
             <span class="idea-arrow">→</span>`;
@@ -1103,6 +1178,10 @@
               <button class="button compact danger" data-delete type="button">Delete</button>
             </div>
           </header>
+          <div class="detail-date-info">
+            <span>Added <strong>${escapeHtml(formatDateFull(idea.createdAt))}</strong></span>
+            <span>Updated <strong>${escapeHtml(formatDateFull(idea.updatedAt))}</strong></span>
+          </div>
           <form class="form" data-edit-form>
             <label class="field"><span>Name</span><input name="name" maxlength="90" value="${escapeAttribute(idea.name)}"></label>
             <div class="field-row">
@@ -1285,6 +1364,17 @@
       function slugify(value) {
         return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "idea";
       }
+
+      function formatDate(dateString) {
+        const date = new Date(dateString);
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        return `${months[date.getUTCMonth()]} ${date.getUTCDate()}, ${date.getUTCFullYear()}`;
+      }
+
+      function formatDateFull(dateString) {
+        return formatDate(dateString);
+      }
+
 
       function escapeHtml(value) {
         return String(value ?? "").replace(/[&<>"']/g, (character) => ({

@@ -3,10 +3,21 @@ import type { ArchiveListItem } from "../core/types";
 
 const $ = <T extends HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
 
+function canCaptureUrl(value: string | undefined): boolean {
+  if (!value) return false;
+  try {
+    return ["http:", "https:"].includes(new URL(value).protocol);
+  } catch {
+    return false;
+  }
+}
+
 async function loadStatus(): Promise<void> {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const platform = tab?.url ? platformForUrl(tab.url) : undefined;
+  const canCapture = canCaptureUrl(tab?.url);
   const button = $("#alwaysEnableButton") as HTMLButtonElement;
+  const captureButton = $("#captureButton") as HTMLButtonElement;
   let origin: string | undefined;
   try {
     origin = tab?.url ? new URL(tab.url).origin : undefined;
@@ -18,12 +29,15 @@ async function loadStatus(): Promise<void> {
     ? await chrome.permissions.contains({ origins: [`${origin}/*`] })
     : false;
   $("#siteName").textContent = platform?.name || (origin ? new URL(origin).hostname : "Unsupported site");
-  $("#siteStatus").textContent = platform
+  $("#siteStatus").textContent = !canCapture
+    ? "Chrome blocks extensions from reading this kind of page. Open the chat in a normal https:// tab."
+    : platform
     ? "Ready when this platform is enabled."
     : hasAccess
       ? "Persistent launcher access is enabled for this origin."
       : "Use one-time capture or enable the launcher for this origin.";
-  $("#captureButton").textContent = platform ? "Open utilities" : "Capture this page once";
+  captureButton.disabled = !canCapture;
+  captureButton.textContent = platform ? "Open utilities" : "Capture this page once";
   button.hidden = !canPersist || hasAccess;
   button.onclick = async () => {
     const granted = await chrome.permissions.request({ origins: [`${origin}/*`] });

@@ -17,6 +17,27 @@ import type { ConversationSnapshot } from "../core/types";
 
 const DEFAULT_ENABLED = ["gemini"];
 
+function injectableUrl(value: string): boolean {
+  try {
+    return ["http:", "https:"].includes(new URL(value).protocol);
+  } catch {
+    return false;
+  }
+}
+
+function unsupportedUrlMessage(value: string): string {
+  let protocol = "this";
+  try {
+    protocol = new URL(value).protocol;
+  } catch {
+    // Keep the generic protocol label.
+  }
+  if (protocol === "chrome:") {
+    return "Chrome blocks extensions from reading chrome:// pages. Open Google AI Mode in a normal web tab, such as https://www.google.com/ai, then try again.";
+  }
+  return "This page cannot be captured because Chrome does not allow extension scripts on this URL.";
+}
+
 async function enabledPlatforms(): Promise<string[]> {
   const { enabledPlatforms = DEFAULT_ENABLED } = await chrome.storage.sync.get({
     enabledPlatforms: DEFAULT_ENABLED
@@ -97,6 +118,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       case "START_CAPTURE": {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (!tab?.id || !tab.url) return { ok: false, error: "No active web page." };
+        if (!injectableUrl(tab.url)) return { ok: false, error: unsupportedUrlMessage(tab.url) };
         const platform = platformForUrl(tab.url);
         try {
           await chrome.tabs.sendMessage(tab.id, { type: "PING" });
