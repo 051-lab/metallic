@@ -1,0 +1,26 @@
+{
+  "name": "Open in Freedium",
+  "version": "1.2.0",
+  "manifest_version": 3,
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "contextMenus",
+    "storage"
+  ],
+  "host_permissions": [],
+  "action": {
+    "default_popup": "options.html"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
+  },
+  "icons": {
+    "32": "logo-32.png",
+    "48": "logo-48.png",
+    "64": "logo-64.png",
+    "128": "logo-128.png"
+  }
+}

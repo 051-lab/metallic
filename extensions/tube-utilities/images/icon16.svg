@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" role="img" aria-label="Tube Utilities">
+  <rect width="16" height="16" rx="4" fill="#111827"/>
+  <path d="M4 5.3c0-.8.6-1.4 1.4-1.4h5.2c.8 0 1.4.6 1.4 1.4v5.4c0 .8-.6 1.4-1.4 1.4H5.4c-.8 0-1.4-.6-1.4-1.4V5.3Z" fill="#8ab4f8"/>
+  <path d="M7 6.1v3.8l3-1.9-3-1.9Z" fill="#0b1020"/>
+</svg>

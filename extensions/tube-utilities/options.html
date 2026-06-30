@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tube Utilities Settings</title>
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body>
+  <main class="page-shell">
+    <header class="page-header">
+      <p class="eyebrow">Settings</p>
+      <h1>Tube Utilities</h1>
+      <p class="muted">Configure transcript capture, export defaults, and the YouTube launcher.</p>
+    </header>
+
+    <form id="optionsForm" class="settings-grid">
+      <section class="panel">
+        <h2>Capture launcher</h2>
+        <label class="check-row">
+          <input id="launcherEnabled" type="checkbox">
+          <span>Show floating launcher on YouTube watch pages</span>
+        </label>
+        <label class="field-label" for="launcherPosition">Launcher position</label>
+        <select id="launcherPosition" class="input">
+          <option value="bottom-right">Bottom right</option>
+          <option value="bottom-left">Bottom left</option>
+        </select>
+      </section>
+
+      <section class="panel">
+        <h2>Export defaults</h2>
+        <label class="field-label" for="defaultFormat">Default format</label>
+        <select id="defaultFormat" class="input">
+          <option value="markdown">Markdown</option>
+          <option value="plain">Plain text</option>
+          <option value="srt">SubRip .srt</option>
+          <option value="vtt">WebVTT .vtt</option>
+        </select>
+
+        <label class="check-row">
+          <input id="includeTimestamps" type="checkbox">
+          <span>Include timestamps in Markdown exports</span>
+        </label>
+      </section>
+
+      <section class="panel">
+        <h2>Filename template</h2>
+        <label class="field-label" for="filenameTemplate">Template</label>
+        <input id="filenameTemplate" class="input" type="text" spellcheck="false">
+        <p class="hint">Available tokens: <code>{title}</code>, <code>{author}</code>, <code>{date}</code>, <code>{videoId}</code></p>
+      </section>
+
+      <section class="panel">
+        <h2>Caption language</h2>
+        <label class="field-label" for="preferredLanguage">Preferred language code</label>
+        <input id="preferredLanguage" class="input" type="text" placeholder="en">
+        <p class="hint">Leave blank to use YouTube’s best available caption track.</p>
+      </section>
+
+      <footer class="form-actions">
+        <button id="saveButton" class="primary-button" type="submit">Save settings</button>
+        <button id="resetButton" class="secondary-button" type="button">Reset defaults</button>
+        <span id="saveStatus" class="muted" role="status"></span>
+      </footer>
+    </form>
+  </main>
+  <script src="dist/options.js"></script>
+</body>
+</html>

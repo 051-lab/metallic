@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en" class="popup-document">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tube Utilities</title>
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body class="popup-page">
+  <main class="popup-shell">
+    <header class="compact-header">
+      <div>
+        <p class="eyebrow">Tube Utilities</p>
+        <h1 id="siteName">Checking page…</h1>
+      </div>
+      <button id="settingsButton" class="icon-button" type="button" title="Settings" aria-label="Open settings">⚙</button>
+    </header>
+
+    <p id="siteStatus" class="muted">Checking the active tab.</p>
+    <button id="captureButton" class="primary-button" type="button">Capture transcript</button>
+
+    <section class="panel">
+      <label class="field-label" for="searchInput">Local archive</label>
+      <input id="searchInput" class="input" type="search" placeholder="Search saved transcripts">
+      <div id="archiveList" class="archive-list" aria-live="polite"></div>
+    </section>
+  </main>
+  <script src="dist/popup.js"></script>
+</body>
+</html>

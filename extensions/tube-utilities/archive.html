@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tube Utilities Archive</title>
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body>
+  <main class="page-shell archive-page">
+    <header class="page-header">
+      <p class="eyebrow">Archive</p>
+      <h1 id="archiveTitle">Loading transcript…</h1>
+      <p id="archiveMeta" class="muted"></p>
+    </header>
+
+    <section class="panel action-bar">
+      <button id="downloadMarkdown" class="primary-button" type="button">Download Markdown</button>
+      <button id="downloadPlain" class="secondary-button" type="button">Download text</button>
+      <button id="copyPlain" class="secondary-button" type="button">Copy text</button>
+      <button id="deleteSnapshot" class="danger-button" type="button">Delete</button>
+      <a id="sourceLink" class="link-button" target="_blank" rel="noreferrer">Open video</a>
+    </section>
+
+    <article class="panel transcript-view">
+      <pre id="transcriptBody">Loading…</pre>
+    </article>
+  </main>
+  <script src="dist/archive.js"></script>
+</body>
+</html>

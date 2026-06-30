@@ -1,0 +1,5 @@
+*.xpi
+chrome/
+firefox/
+temp/
+local/

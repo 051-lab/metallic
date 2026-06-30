@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Tube Utilities">
+  <defs>
+    <linearGradient id="g" x1="24" y1="12" x2="104" y2="116" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#b7d3ff"/>
+      <stop offset=".48" stop-color="#8ab4f8"/>
+      <stop offset="1" stop-color="#4f7fca"/>
+    </linearGradient>
+    <filter id="s" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="10" flood-color="#000" flood-opacity=".45"/>
+    </filter>
+  </defs>
+  <rect width="128" height="128" rx="30" fill="#0b0f18"/>
+  <path d="M24 43c0-10.5 8.5-19 19-19h42c10.5 0 19 8.5 19 19v42c0 10.5-8.5 19-19 19H43c-10.5 0-19-8.5-19-19V43Z" fill="url(#g)" filter="url(#s)"/>
+  <path d="M55 45v38l31-19-31-19Z" fill="#090f1c"/>
+  <path d="M38 109h52" stroke="#8ab4f8" stroke-width="6" stroke-linecap="round" opacity=".45"/>
+</svg>
