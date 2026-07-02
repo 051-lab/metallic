@@ -26,7 +26,8 @@ metallic/
 ├── extensions/
 │   ├── comet-ntp/
 │   ├── ai-chat-utilities/
-│   └── localhost-dashboard/
+│   ├── localhost-dashboard/
+│   └── workspace-forge/
 ├── shared/            # Reusable utilities and components
 ├── templates/         # Starter templates for new extensions
 └── README.md
@@ -67,6 +68,17 @@ Load unpacked from:
 
 ```text
 extensions/localhost-dashboard
+```
+
+### Workspace Forge
+
+Turns messy browser windows into named, reusable project workspaces with saved
+tabs, restore actions, tab grouping, notes, next actions, and lightweight tasks.
+
+Load unpacked from:
+
+```text
+extensions/workspace-forge
 ```
 
 ---

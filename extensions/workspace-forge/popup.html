@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Workspace Forge</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="popup-shell">
+      <header>
+        <p class="eyebrow">Metallic</p>
+        <h1>Workspace Forge</h1>
+        <p>Open the side panel or capture this browser window as a reusable project workspace.</p>
+      </header>
+
+      <section id="notice" class="notice" hidden></section>
+
+      <div class="actions">
+        <button id="open-panel" class="button primary" type="button">Open Side Panel</button>
+        <button id="save-window" class="button" type="button">Save Current Window</button>
+      </div>
+
+      <section class="summary">
+        <strong id="workspace-count">0</strong>
+        <span>saved workspace<span id="plural">s</span></span>
+      </section>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

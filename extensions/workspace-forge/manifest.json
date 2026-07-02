@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "Metallic Workspace Forge",
+  "version": "0.1.0",
+  "description": "Project-based browser workspaces for saving, restoring, grouping, and focusing Chrome tabs.",
+  "permissions": [
+    "tabs",
+    "tabGroups",
+    "storage",
+    "sidePanel"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Workspace Forge",
+    "default_popup": "popup.html"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "commands": {
+    "open-workspace-forge": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Y",
+        "mac": "Command+Shift+Y"
+      },
+      "description": "Open Metallic Workspace Forge"
+    }
+  }
+}
