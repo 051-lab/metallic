@@ -7,7 +7,7 @@
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "skipLibCheck": true,
-    "types": ["chrome", "vitest/globals"]
+    "types": ["chrome", "node", "vitest/globals"]
   },
   "include": ["src/**/*.ts", "tests/**/*.ts"]
 }

@@ -14,6 +14,8 @@
   "dependencies": {},
   "devDependencies": {
     "@types/chrome": "^0.0.322",
+    "@types/jsdom": "^21.1.7",
+    "@types/node": "^22.10.0",
     "esbuild": "^0.25.5",
     "fake-indexeddb": "^6.2.5",
     "jsdom": "^26.1.0",
