@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en" class="popup-document">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Frame Meter</title>
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body class="popup-page">
+  <main class="popup-shell">
+    <header class="compact-header">
+      <div>
+        <p class="eyebrow">Frame Meter</p>
+        <h1>Live FPS overlay</h1>
+      </div>
+      <button id="settingsButton" class="icon-button" type="button" title="Settings" aria-label="Open settings">⚙</button>
+    </header>
+
+    <label class="check-row">
+      <input id="enabled" type="checkbox">
+      <span>Show FPS overlay</span>
+    </label>
+
+    <section class="panel">
+      <label class="field-label" for="corner">Corner</label>
+      <select id="corner" class="input">
+        <option value="top-left">Top left</option>
+        <option value="top-right">Top right</option>
+        <option value="bottom-left">Bottom left</option>
+        <option value="bottom-right">Bottom right</option>
+      </select>
+
+      <label class="check-row">
+        <input id="showFrameTime" type="checkbox">
+        <span>Show frame time (ms)</span>
+      </label>
+
+      <label class="check-row">
+        <input id="colorCoding" type="checkbox">
+        <span>Color-code FPS (green/yellow/red)</span>
+      </label>
+    </section>
+
+    <p id="status" class="muted" role="status"></p>
+  </main>
+  <script src="dist/popup.js"></script>
+</body>
+</html>

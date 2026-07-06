@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Frame Meter Settings</title>
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body>
+  <main class="page-shell">
+    <header class="page-header">
+      <p class="eyebrow">Settings</p>
+      <h1>Frame Meter</h1>
+      <p class="muted">Configure the FPS overlay behavior and per-site disable list.</p>
+    </header>
+
+    <form id="optionsForm" class="settings-grid">
+      <section class="panel">
+        <h2>Overlay</h2>
+        <label class="check-row">
+          <input id="enabled" type="checkbox">
+          <span>Show FPS overlay by default</span>
+        </label>
+        <label class="field-label" for="corner">Corner</label>
+        <select id="corner" class="input">
+          <option value="top-left">Top left</option>
+          <option value="top-right">Top right</option>
+          <option value="bottom-left">Bottom left</option>
+          <option value="bottom-right">Bottom right</option>
+        </select>
+        <label class="check-row">
+          <input id="showFrameTime" type="checkbox">
+          <span>Show frame time (ms)</span>
+        </label>
+        <label class="check-row">
+          <input id="colorCoding" type="checkbox">
+          <span>Color-code FPS (green/yellow/red)</span>
+        </label>
+      </section>
+
+      <section class="panel">
+        <h2>Disabled sites</h2>
+        <label class="field-label" for="disabledSites">One hostname per line</label>
+        <textarea id="disabledSites" class="input" rows="6" placeholder="example.com" spellcheck="false"></textarea>
+        <p class="hint">A site and its subdomains will not show the overlay.</p>
+      </section>
+
+      <footer class="form-actions">
+        <button id="saveButton" class="primary-button" type="submit">Save settings</button>
+        <button id="resetButton" class="secondary-button" type="button">Reset defaults</button>
+        <span id="saveStatus" class="muted" role="status"></span>
+      </footer>
+    </form>
+  </main>
+  <script src="dist/options.js"></script>
+</body>
+</html>

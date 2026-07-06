@@ -26,6 +26,7 @@ metallic/
 ├── extensions/
 │   ├── comet-ntp/
 │   ├── ai-chat-utilities/
+│   ├── frame-meter/
 │   └── localhost-dashboard/
 ├── shared/            # Reusable utilities and components
 ├── templates/         # Starter templates for new extensions
@@ -67,6 +68,18 @@ Load unpacked from:
 
 ```text
 extensions/localhost-dashboard
+```
+
+### Frame Meter
+
+Displays a live FPS counter overlay on any web page, measured via
+`requestAnimationFrame`. Configurable corner placement, color coding,
+frame-time toggle, expandable session stats, and a per-site disable list.
+
+Load unpacked from:
+
+```text
+extensions/frame-meter
 ```
 
 ---
