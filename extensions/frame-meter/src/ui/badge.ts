@@ -116,10 +116,10 @@ export function mountBadge(
         lastColor = next;
       }
       if (ftEl) ftEl.textContent = `${stats.frameTimeMs.toFixed(1)}ms`;
-      shadow.querySelector<HTMLDdElement>(".avg")!.textContent = formatFps(stats.average);
-      shadow.querySelector<HTMLDdElement>(".min")!.textContent = formatFps(stats.min);
-      shadow.querySelector<HTMLDdElement>(".max")!.textContent = formatFps(stats.max);
-      shadow.querySelector<HTMLDdElement>(".ft")!.textContent = `${stats.frameTimeMs.toFixed(1)}ms`;
+      shadow.querySelector<HTMLElement>(".avg")!.textContent = formatFps(stats.average);
+      shadow.querySelector<HTMLElement>(".min")!.textContent = formatFps(stats.min);
+      shadow.querySelector<HTMLElement>(".max")!.textContent = formatFps(stats.max);
+      shadow.querySelector<HTMLElement>(".ft")!.textContent = `${stats.frameTimeMs.toFixed(1)}ms`;
     },
     remove() {
       host.remove();

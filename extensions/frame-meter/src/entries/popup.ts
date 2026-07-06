@@ -22,7 +22,7 @@ function writeForm(prefs: FrameMeterPrefs): void {
 
 async function notifyActiveTab(): Promise<void> {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (typeof tab.id !== "number") return;
+  if (!tab || typeof tab.id !== "number") return;
   try {
     await chrome.tabs.sendMessage(tab.id, { type: MessageType.UPDATE_PREFS });
   } catch {
