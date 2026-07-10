@@ -6,7 +6,8 @@ await mkdir("dist", { recursive: true });
 
 const options = {
   entryPoints: {
-    popup: "src/entries/popup.ts"
+    popup: "src/entries/popup.ts",
+    "activation-hotfix": "src/entries/activation-hotfix.ts"
   },
   bundle: true,
   outdir: "dist",
