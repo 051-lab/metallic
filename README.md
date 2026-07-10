@@ -4,7 +4,7 @@
   ████╗ ████║██╔════╝╚══██╔══╝██╔══██╗██║     ██║     ██║██╔════╝
   ██╔████╔██║█████╗     ██║   ███████║██║     ██║     ██║██║
   ██║╚██╔╝██║██╔══╝     ██║   ██╔══██║██║     ██║     ██║██║
-  ██║ ╚═╝ ██║███████╗   ██║   ██║  ██║███████╗███████╗██║╚██████╗
+  ██║ ╚═╝ ██║███████╗   ██║   ██╔══██║███████╗███████╗██║╚██████╗
   ╚═╝     ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝ ╚═════╝
 
 ```
@@ -24,11 +24,14 @@
 ```
 metallic/
 ├── extensions/
-│   ├── comet-ntp/
 │   ├── ai-chat-utilities/
+│   ├── comet-ntp/
 │   ├── frame-meter/
+│   ├── freedium/
 │   ├── localhost-dashboard/
-│   └── tab-finder/
+│   ├── tab-finder/
+│   └── tube-utilities/
+├── scripts/           # Workspace-level validation utilities
 ├── shared/            # Reusable utilities and components
 ├── templates/         # Starter templates for new extensions
 └── README.md
@@ -37,17 +40,6 @@ metallic/
 ---
 
 ## 🔌 Extensions
-
-### comet-ntp
-
-Provides a custom new tab dashboard for the Comet browser using manifest,
-navigation, and network redirect layers.
-
-Load unpacked from:
-
-```text
-extensions/comet-ntp
-```
 
 ### AI Chat Utilities
 
@@ -60,15 +52,15 @@ Load unpacked from:
 extensions/ai-chat-utilities
 ```
 
-### Localhost Dashboard
+### comet-ntp
 
-Provides a developer dashboard for monitoring and navigating locally running
-servers.
+Provides a custom new tab dashboard for the Comet browser using manifest,
+navigation, and network redirect layers.
 
 Load unpacked from:
 
 ```text
-extensions/localhost-dashboard
+extensions/comet-ntp
 ```
 
 ### Frame Meter
@@ -83,6 +75,29 @@ Load unpacked from:
 extensions/frame-meter
 ```
 
+### Open in Freedium
+
+Adds context-menu actions for opening supported article links and pages through
+Freedium. The Chrome build uses `manifest-v3-chrome.json` as its source
+manifest.
+
+Build and load according to:
+
+```text
+extensions/freedium/README.md
+```
+
+### Localhost Dashboard
+
+Provides a developer dashboard for monitoring and navigating locally running
+servers.
+
+Load unpacked from:
+
+```text
+extensions/localhost-dashboard
+```
+
 ### Metallic Tab Finder
 
 Provides keyboard-first fuzzy search across every open tab and normal Chrome
@@ -93,6 +108,17 @@ Load unpacked from:
 
 ```text
 extensions/tab-finder
+```
+
+### Tube Utilities
+
+Captures, exports, and locally archives YouTube transcripts. Supports Markdown,
+plain text, SubRip, and WebVTT output.
+
+Load unpacked after building from:
+
+```text
+extensions/tube-utilities
 ```
 
 ---
@@ -112,6 +138,17 @@ git clone https://github.com/051-lab/metallic.git
 cd metallic
 ```
 
+### Validate the workspace
+
+```bash
+npm run validate
+```
+
+The validator discovers extension directories, parses their Manifest V3 source,
+and checks that files referenced by each manifest exist. Pull requests also run
+the individual `npm run check` pipeline for every extension package that defines
+one in the repository workflow matrix.
+
 ---
 
 ## 🔌 Loading an Extension in Chrome
@@ -125,7 +162,9 @@ cd metallic
 
 ## 🛠 Extension Anatomy
 
-Every Chrome extension needs a `manifest.json`. Here's a Manifest V3 baseline:
+Every Chrome extension needs a Manifest V3 file. Most Metallic extensions use
+`manifest.json`; imported projects may keep a clearly documented source
+manifest such as `manifest-v3-chrome.json`.
 
 ```json
 {
