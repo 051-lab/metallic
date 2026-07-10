@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Metallic Tab Finder",
+  "version": "0.2.1",
+  "description": "Find and switch to any open tab across every Chrome window.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Find an open tab"
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+Shift+K",
+        "mac": "Command+Shift+K"
+      },
+      "description": "Open Metallic Tab Finder"
+    }
+  },
+  "permissions": [
+    "tabs",
+    "storage"
+  ]
+}

@@ -27,7 +27,8 @@ metallic/
 │   ├── comet-ntp/
 │   ├── ai-chat-utilities/
 │   ├── frame-meter/
-│   └── localhost-dashboard/
+│   ├── localhost-dashboard/
+│   └── tab-finder/
 ├── shared/            # Reusable utilities and components
 ├── templates/         # Starter templates for new extensions
 └── README.md
@@ -80,6 +81,18 @@ Load unpacked from:
 
 ```text
 extensions/frame-meter
+```
+
+### Metallic Tab Finder
+
+Provides keyboard-first fuzzy search across every open tab and normal Chrome
+window. Results can be grouped by window or domain and include tab-state and
+duplicate indicators.
+
+Load unpacked from:
+
+```text
+extensions/tab-finder
 ```
 
 ---
