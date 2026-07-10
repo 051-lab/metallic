@@ -6,7 +6,7 @@ It is intentionally smaller than a session manager or workspace dashboard. The e
 
 ## v0.2.1 Fix
 
-- Fixed keyboard and click activation across browser windows. Tab Finder now activates the selected tab before focusing its window, preventing Chrome from closing the popup before the activation request is sent.
+- Fixed keyboard and click activation across browser windows. Tab Finder activates the selected tab before focusing its window, preventing Chrome from closing the popup before the activation request is sent.
 
 ## Features
 
@@ -33,7 +33,7 @@ It is intentionally smaller than a session manager or workspace dashboard. The e
 extensions/tab-finder
 ```
 
-The committed runtime bundles make the branch directly loadable without a local build.
+The committed `dist/popup.js` bundle makes the branch directly loadable without a local build.
 
 ## Keyboard Controls
 
