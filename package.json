@@ -1,0 +1,10 @@
+{
+  "name": "metallic-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "validate": "node scripts/validate-workspace.mjs",
+    "check": "npm run validate"
+  }
+}
