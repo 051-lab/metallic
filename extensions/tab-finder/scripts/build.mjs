@@ -12,8 +12,8 @@ const options = {
   outdir: "dist",
   format: "iife",
   target: "chrome120",
-  sourcemap: true,
-  minify: false,
+  sourcemap: false,
+  minify: true,
   logLevel: "info"
 };
 
