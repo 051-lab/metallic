@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          show-progress: false
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -35,6 +37,8 @@ jobs:
         working-directory: extensions/${{ matrix.extension }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          show-progress: false
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -42,8 +46,13 @@ jobs:
         shell: bash
         run: |
           if [[ -f package-lock.json ]]; then
-            npm ci
+            npm ci --no-audit --no-fund
           else
             npm install --no-audit --no-fund
           fi
-      - run: npm run check
+      - name: Type-check
+        run: npm run typecheck
+      - name: Build
+        run: npm run build
+      - name: Test
+        run: npx vitest run --pool=forks --maxWorkers=1
