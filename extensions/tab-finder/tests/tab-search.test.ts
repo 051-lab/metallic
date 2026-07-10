@@ -2,10 +2,13 @@ import {
   domainForUrl,
   duplicateCounts,
   normalizedUrlForDuplicate,
+  recencyBoost,
   scoreTab,
   searchTabs,
   type TabCandidate
 } from "../src/core/tab-search";
+
+const NOW = Date.UTC(2026, 6, 10, 22, 0, 0);
 
 const tabs: TabCandidate[] = [
   {
@@ -18,7 +21,8 @@ const tabs: TabCandidate[] = [
     active: true,
     pinned: false,
     audible: false,
-    discarded: false
+    discarded: false,
+    lastAccessed: NOW - 2 * 60_000
   },
   {
     id: 2,
@@ -30,7 +34,8 @@ const tabs: TabCandidate[] = [
     active: false,
     pinned: true,
     audible: false,
-    discarded: false
+    discarded: false,
+    lastAccessed: NOW - 30 * 60_000
   },
   {
     id: 3,
@@ -42,7 +47,8 @@ const tabs: TabCandidate[] = [
     active: false,
     pinned: false,
     audible: false,
-    discarded: true
+    discarded: true,
+    lastAccessed: NOW - 3 * 24 * 60 * 60_000
   }
 ];
 
@@ -57,22 +63,37 @@ describe("domainForUrl", () => {
   });
 });
 
+describe("recencyBoost", () => {
+  it("uses bounded activity buckets", () => {
+    expect(recencyBoost(NOW - 60_000, NOW)).toBe(24);
+    expect(recencyBoost(NOW - 30 * 60_000, NOW)).toBe(18);
+    expect(recencyBoost(NOW - 12 * 60 * 60_000, NOW)).toBe(12);
+    expect(recencyBoost(NOW - 3 * 24 * 60 * 60_000, NOW)).toBe(6);
+    expect(recencyBoost(NOW - 10 * 24 * 60 * 60_000, NOW)).toBe(0);
+  });
+});
+
 describe("tab scoring", () => {
   it("ranks exact domain matches strongly", () => {
-    expect(scoreTab(tabs[0]!, "github.com")).toBeGreaterThan(scoreTab(tabs[0]!, "metal"));
+    expect(scoreTab(tabs[0]!, "github.com", NOW)).toBeGreaterThan(scoreTab(tabs[0]!, "metal", NOW));
   });
 
   it("supports fuzzy subsequence matching", () => {
-    expect(scoreTab(tabs[1]!, "chrm ext")).toBeGreaterThan(0);
+    expect(scoreTab(tabs[1]!, "chrm ext", NOW)).toBeGreaterThan(0);
   });
 
   it("requires every query token to match", () => {
-    expect(scoreTab(tabs[1]!, "chrome impossible-token")).toBe(Number.NEGATIVE_INFINITY);
+    expect(scoreTab(tabs[1]!, "chrome impossible-token", NOW)).toBe(Number.NEGATIVE_INFINITY);
   });
 
-  it("returns ranked matches and preserves browser order for an empty query", () => {
-    expect(searchTabs(tabs, "metallic").map((result) => result.tab.id)).toEqual([1, 3]);
-    expect(searchTabs(tabs, "").map((result) => result.tab.id)).toEqual([1, 2, 3]);
+  it("returns ranked matches", () => {
+    expect(searchTabs(tabs, "metallic", NOW).map((result) => result.tab.id)).toEqual([1, 3]);
+  });
+
+  it("uses recent activity for an empty query", () => {
+    const recent = { ...tabs[1]!, id: 4, pinned: false, lastAccessed: NOW - 1_000 };
+    const old = { ...tabs[1]!, id: 5, pinned: false, lastAccessed: NOW - 8 * 24 * 60 * 60_000 };
+    expect(searchTabs([old, recent], "", NOW).map((result) => result.tab.id)).toEqual([4, 5]);
   });
 });
 
