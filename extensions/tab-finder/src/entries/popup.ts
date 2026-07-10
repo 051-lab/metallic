@@ -14,6 +14,7 @@ interface PopupState {
   results: TabSearchResult[];
   displayResults: TabSearchResult[];
   groupMode: GroupMode;
+  duplicatesOnly: boolean;
   selectedIndex: number;
   windowLabels: Map<number, string>;
   duplicateCounts: Map<string, number>;
@@ -33,6 +34,8 @@ const elements = {
   windowBadge: requiredElement<HTMLElement>("windowBadge"),
   groupWindow: requiredElement<HTMLButtonElement>("groupWindow"),
   groupDomain: requiredElement<HTMLButtonElement>("groupDomain"),
+  duplicateOnly: requiredElement<HTMLButtonElement>("duplicateOnly"),
+  duplicateCount: requiredElement<HTMLElement>("duplicateCount"),
   refresh: requiredElement<HTMLButtonElement>("refreshButton")
 };
 
@@ -41,10 +44,14 @@ const state: PopupState = {
   results: [],
   displayResults: [],
   groupMode: "window",
+  duplicatesOnly: false,
   selectedIndex: 0,
   windowLabels: new Map(),
   duplicateCounts: new Map()
 };
+
+let refreshTimer: number | undefined;
+let loadGeneration = 0;
 
 function groupLabel(result: TabSearchResult): string {
   return state.groupMode === "domain"
@@ -84,6 +91,7 @@ function createTabRow(result: TabSearchResult, resultIndex: number): HTMLButtonE
   const { tab } = result;
   const button = document.createElement("button");
   button.type = "button";
+  button.id = `tab-result-${tab.id}`;
   button.className = "tab-row";
   button.dataset.resultIndex = String(resultIndex);
   button.setAttribute("role", "option");
@@ -125,13 +133,20 @@ function createTabRow(result: TabSearchResult, resultIndex: number): HTMLButtonE
 }
 
 function renderSelection(scrollIntoView: boolean): void {
+  let activeId = "";
   const rows = elements.results.querySelectorAll<HTMLButtonElement>(".tab-row");
   rows.forEach((row) => {
     const selected = Number(row.dataset.resultIndex) === state.selectedIndex;
     row.classList.toggle("is-selected", selected);
     row.setAttribute("aria-selected", String(selected));
-    if (selected && scrollIntoView) row.scrollIntoView({ block: "nearest" });
+    if (selected) {
+      activeId = row.id;
+      if (scrollIntoView) row.scrollIntoView({ block: "nearest" });
+    }
   });
+
+  if (activeId) elements.search.setAttribute("aria-activedescendant", activeId);
+  else elements.search.removeAttribute("aria-activedescendant");
 }
 
 function duplicateExcessCount(): number {
@@ -140,11 +155,45 @@ function duplicateExcessCount(): number {
   return count;
 }
 
+function duplicateTabCount(): number {
+  return state.tabs.filter((tab) =>
+    (state.duplicateCounts.get(normalizedUrlForDuplicate(tab.url)) || 0) > 1
+  ).length;
+}
+
+function renderDuplicateControl(): void {
+  const count = duplicateTabCount();
+  elements.duplicateCount.textContent = String(count);
+  elements.duplicateOnly.classList.toggle("is-active", state.duplicatesOnly);
+  elements.duplicateOnly.setAttribute("aria-pressed", String(state.duplicatesOnly));
+  elements.duplicateOnly.title = count
+    ? `Show only ${count} tabs with duplicate URLs (Alt+D)`
+    : "No duplicate URLs are currently open";
+}
+
 function renderSummary(): void {
   const windowCount = state.windowLabels.size;
   const duplicateCount = duplicateExcessCount();
+  const filterLabel = state.duplicatesOnly ? " · duplicates only" : "";
   elements.windowBadge.textContent = `${windowCount} window${windowCount === 1 ? "" : "s"}`;
-  elements.summary.textContent = `${state.results.length} of ${state.tabs.length} tabs · ${windowCount} window${windowCount === 1 ? "" : "s"} · ${duplicateCount} duplicate${duplicateCount === 1 ? "" : "s"}`;
+  elements.summary.textContent = `${state.results.length} of ${state.tabs.length} tabs · ${windowCount} window${windowCount === 1 ? "" : "s"} · ${duplicateCount} duplicate${duplicateCount === 1 ? "" : "s"}${filterLabel}`;
+}
+
+function renderEmptyState(): void {
+  const heading = elements.empty.querySelector("strong");
+  const copy = elements.empty.querySelector("p");
+  if (!heading || !copy) return;
+
+  if (state.duplicatesOnly && elements.search.value.trim()) {
+    heading.textContent = "No matching duplicates";
+    copy.textContent = "Clear the query or turn off the duplicate filter.";
+  } else if (state.duplicatesOnly) {
+    heading.textContent = "No duplicate tabs";
+    copy.textContent = "No equivalent URLs are open more than once.";
+  } else {
+    heading.textContent = "No matching tabs";
+    copy.textContent = "Try a title, domain, or a shorter fuzzy search.";
+  }
 }
 
 function groupedResults(): Map<string, TabSearchResult[]> {
@@ -158,10 +207,22 @@ function groupedResults(): Map<string, TabSearchResult[]> {
   return groups;
 }
 
-function render(): void {
-  state.results = searchTabs(state.tabs, elements.search.value).slice(0, 200);
+function render(preferredTabId?: number): void {
+  const ranked = searchTabs(state.tabs, elements.search.value);
+  state.results = state.duplicatesOnly
+    ? ranked.filter((result) =>
+      (state.duplicateCounts.get(normalizedUrlForDuplicate(result.tab.url)) || 0) > 1
+    )
+    : ranked;
+
   const groups = groupedResults();
   state.displayResults = [...groups.values()].flat();
+
+  if (preferredTabId !== undefined) {
+    const preferredIndex = state.displayResults.findIndex((result) => result.tab.id === preferredTabId);
+    if (preferredIndex >= 0) state.selectedIndex = preferredIndex;
+  }
+
   state.selectedIndex = state.displayResults.length
     ? Math.max(0, Math.min(state.selectedIndex, state.displayResults.length - 1))
     : -1;
@@ -196,7 +257,9 @@ function render(): void {
     elements.results.append(section);
   }
 
+  renderDuplicateControl();
   renderSummary();
+  renderEmptyState();
   renderSelection(false);
 }
 
@@ -216,6 +279,12 @@ function moveSelection(delta: number): void {
   renderSelection(true);
 }
 
+function jumpSelection(index: number): void {
+  if (!state.displayResults.length) return;
+  state.selectedIndex = Math.max(0, Math.min(index, state.displayResults.length - 1));
+  renderSelection(true);
+}
+
 async function setGroupMode(mode: GroupMode): Promise<void> {
   state.groupMode = mode;
   elements.groupWindow.classList.toggle("is-active", mode === "window");
@@ -225,28 +294,43 @@ async function setGroupMode(mode: GroupMode): Promise<void> {
   await chrome.storage.sync.set({ groupMode: mode });
   state.selectedIndex = 0;
   render();
+  elements.search.focus({ preventScroll: true });
 }
 
-async function loadTabs(): Promise<void> {
+function toggleDuplicatesOnly(): void {
+  state.duplicatesOnly = !state.duplicatesOnly;
+  state.selectedIndex = 0;
+  render();
+  elements.search.focus({ preventScroll: true });
+}
+
+async function loadTabs(preserveSelection = false, quiet = false): Promise<void> {
+  const generation = ++loadGeneration;
+  const selectedTabId = preserveSelection
+    ? state.displayResults[state.selectedIndex]?.tab.id
+    : undefined;
+
   elements.refresh.disabled = true;
-  elements.summary.textContent = "Reading open Chrome windows…";
+  if (!quiet) elements.summary.textContent = "Reading open Chrome windows…";
 
   try {
     const browserWindows = await chrome.windows.getAll({ populate: true, windowTypes: ["normal"] });
-    state.tabs = [];
-    state.windowLabels.clear();
+    if (generation !== loadGeneration) return;
+
+    const tabs: TabCandidate[] = [];
+    const labels = new Map<number, string>();
 
     let ordinal = 1;
     for (const browserWindow of browserWindows) {
       if (typeof browserWindow.id !== "number") continue;
-      state.windowLabels.set(browserWindow.id, `Window ${ordinal}${browserWindow.focused ? " · Current" : ""}`);
+      labels.set(browserWindow.id, `Window ${ordinal}${browserWindow.focused ? " · Current" : ""}`);
       ordinal += 1;
 
       for (const tab of browserWindow.tabs || []) {
         if (typeof tab.id !== "number" || typeof tab.windowId !== "number") continue;
         const url = tab.url || "";
         const domain = domainForUrl(url);
-        state.tabs.push({
+        tabs.push({
           id: tab.id,
           windowId: tab.windowId,
           index: tab.index,
@@ -257,15 +341,19 @@ async function loadTabs(): Promise<void> {
           active: tab.active,
           pinned: tab.pinned,
           audible: tab.audible || false,
-          discarded: tab.discarded || false
+          discarded: tab.discarded || false,
+          lastAccessed: tab.lastAccessed
         });
       }
     }
 
+    state.tabs = tabs;
+    state.windowLabels = labels;
     state.duplicateCounts = duplicateCounts(state.tabs);
-    state.selectedIndex = 0;
-    render();
+    if (!preserveSelection) state.selectedIndex = 0;
+    render(selectedTabId);
   } catch (error) {
+    if (generation !== loadGeneration) return;
     state.tabs = [];
     state.results = [];
     state.displayResults = [];
@@ -278,8 +366,30 @@ async function loadTabs(): Promise<void> {
     if (copy) copy.textContent = error instanceof Error ? error.message : "Chrome did not return the current tab list.";
     elements.summary.textContent = "Tab loading failed.";
   } finally {
-    elements.refresh.disabled = false;
+    if (generation === loadGeneration) elements.refresh.disabled = false;
   }
+}
+
+function scheduleReload(): void {
+  if (refreshTimer !== undefined) window.clearTimeout(refreshTimer);
+  refreshTimer = window.setTimeout(() => {
+    refreshTimer = undefined;
+    void loadTabs(true, true);
+  }, 120);
+}
+
+function bindChromeEvents(): void {
+  chrome.tabs.onCreated.addListener(scheduleReload);
+  chrome.tabs.onRemoved.addListener(scheduleReload);
+  chrome.tabs.onUpdated.addListener(scheduleReload);
+  chrome.tabs.onMoved.addListener(scheduleReload);
+  chrome.tabs.onAttached.addListener(scheduleReload);
+  chrome.tabs.onDetached.addListener(scheduleReload);
+  chrome.tabs.onActivated.addListener(scheduleReload);
+  chrome.tabs.onReplaced.addListener(scheduleReload);
+  chrome.windows.onCreated.addListener(scheduleReload);
+  chrome.windows.onRemoved.addListener(scheduleReload);
+  chrome.windows.onFocusChanged.addListener(scheduleReload);
 }
 
 function bindEvents(): void {
@@ -295,6 +405,18 @@ function bindEvents(): void {
     } else if (event.key === "ArrowUp") {
       event.preventDefault();
       moveSelection(-1);
+    } else if (event.key === "PageDown") {
+      event.preventDefault();
+      moveSelection(8);
+    } else if (event.key === "PageUp") {
+      event.preventDefault();
+      moveSelection(-8);
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      jumpSelection(0);
+    } else if (event.key === "End") {
+      event.preventDefault();
+      jumpSelection(state.displayResults.length - 1);
     } else if (event.key === "Enter") {
       event.preventDefault();
       const selected = state.displayResults[state.selectedIndex];
@@ -305,6 +427,10 @@ function bindEvents(): void {
         elements.search.value = "";
         state.selectedIndex = 0;
         render();
+      } else if (state.duplicatesOnly) {
+        state.duplicatesOnly = false;
+        state.selectedIndex = 0;
+        render();
       } else {
         window.close();
       }
@@ -312,7 +438,10 @@ function bindEvents(): void {
   });
 
   document.addEventListener("keydown", (event) => {
-    if (event.key === "/" && document.activeElement !== elements.search) {
+    if (event.altKey && event.key.toLowerCase() === "d") {
+      event.preventDefault();
+      toggleDuplicatesOnly();
+    } else if (event.key === "/" && document.activeElement !== elements.search) {
       event.preventDefault();
       elements.search.focus();
     }
@@ -320,11 +449,13 @@ function bindEvents(): void {
 
   elements.groupWindow.addEventListener("click", () => void setGroupMode("window"));
   elements.groupDomain.addEventListener("click", () => void setGroupMode("domain"));
-  elements.refresh.addEventListener("click", () => void loadTabs());
+  elements.duplicateOnly.addEventListener("click", toggleDuplicatesOnly);
+  elements.refresh.addEventListener("click", () => void loadTabs(true));
 }
 
 async function start(): Promise<void> {
   bindEvents();
+  bindChromeEvents();
   const stored = await chrome.storage.sync.get({ groupMode: "window" });
   state.groupMode = stored.groupMode === "domain" ? "domain" : "window";
   elements.groupWindow.classList.toggle("is-active", state.groupMode === "window");
