@@ -12,6 +12,7 @@ type GroupMode = "window" | "domain";
 interface PopupState {
   tabs: TabCandidate[];
   results: TabSearchResult[];
+  displayResults: TabSearchResult[];
   groupMode: GroupMode;
   selectedIndex: number;
   windowLabels: Map<number, string>;
@@ -38,6 +39,7 @@ const elements = {
 const state: PopupState = {
   tabs: [],
   results: [],
+  displayResults: [],
   groupMode: "window",
   selectedIndex: 0,
   windowLabels: new Map(),
@@ -45,8 +47,9 @@ const state: PopupState = {
 };
 
 function groupLabel(result: TabSearchResult): string {
-  if (state.groupMode === "domain") return result.tab.domain;
-  return state.windowLabels.get(result.tab.windowId) || `Window ${result.tab.windowId}`;
+  return state.groupMode === "domain"
+    ? result.tab.domain
+    : state.windowLabels.get(result.tab.windowId) || `Window ${result.tab.windowId}`;
 }
 
 function createStatusChip(label: string, className = "", title = ""): HTMLElement {
@@ -89,18 +92,15 @@ function createTabRow(result: TabSearchResult, resultIndex: number): HTMLButtonE
 
   const copy = document.createElement("span");
   copy.className = "tab-copy";
-
   const title = document.createElement("span");
   title.className = "tab-title";
   title.textContent = tab.title;
-
   const metadata = document.createElement("span");
   metadata.className = "tab-meta";
   const domain = document.createElement("span");
   domain.className = "tab-domain";
   domain.textContent = tab.domain;
   metadata.append(domain);
-
   copy.append(title, metadata);
 
   const statuses = document.createElement("span");
@@ -127,10 +127,10 @@ function createTabRow(result: TabSearchResult, resultIndex: number): HTMLButtonE
 function renderSelection(scrollIntoView: boolean): void {
   const rows = elements.results.querySelectorAll<HTMLButtonElement>(".tab-row");
   rows.forEach((row) => {
-    const isSelected = Number(row.dataset.resultIndex) === state.selectedIndex;
-    row.classList.toggle("is-selected", isSelected);
-    row.setAttribute("aria-selected", String(isSelected));
-    if (isSelected && scrollIntoView) row.scrollIntoView({ block: "nearest" });
+    const selected = Number(row.dataset.resultIndex) === state.selectedIndex;
+    row.classList.toggle("is-selected", selected);
+    row.setAttribute("aria-selected", String(selected));
+    if (selected && scrollIntoView) row.scrollIntoView({ block: "nearest" });
   });
 }
 
@@ -147,23 +147,28 @@ function renderSummary(): void {
   elements.summary.textContent = `${state.results.length} of ${state.tabs.length} tabs · ${windowCount} window${windowCount === 1 ? "" : "s"} · ${duplicateCount} duplicate${duplicateCount === 1 ? "" : "s"}`;
 }
 
-function render(): void {
-  state.results = searchTabs(state.tabs, elements.search.value).slice(0, 200);
-  state.selectedIndex = state.results.length
-    ? Math.max(0, Math.min(state.selectedIndex, state.results.length - 1))
-    : -1;
-
-  elements.results.replaceChildren();
-  elements.empty.hidden = state.results.length > 0;
-  elements.results.hidden = state.results.length === 0;
-
+function groupedResults(): Map<string, TabSearchResult[]> {
   const groups = new Map<string, TabSearchResult[]>();
   for (const result of state.results) {
     const label = groupLabel(result);
-    const current = groups.get(label) || [];
-    current.push(result);
-    groups.set(label, current);
+    const group = groups.get(label) || [];
+    group.push(result);
+    groups.set(label, group);
   }
+  return groups;
+}
+
+function render(): void {
+  state.results = searchTabs(state.tabs, elements.search.value).slice(0, 200);
+  const groups = groupedResults();
+  state.displayResults = [...groups.values()].flat();
+  state.selectedIndex = state.displayResults.length
+    ? Math.max(0, Math.min(state.selectedIndex, state.displayResults.length - 1))
+    : -1;
+
+  elements.results.replaceChildren();
+  elements.empty.hidden = state.displayResults.length > 0;
+  elements.results.hidden = state.displayResults.length === 0;
 
   let resultIndex = 0;
   for (const [label, results] of groups) {
@@ -206,8 +211,8 @@ async function activateTab(tab: TabCandidate): Promise<void> {
 }
 
 function moveSelection(delta: number): void {
-  if (!state.results.length) return;
-  state.selectedIndex = (state.selectedIndex + delta + state.results.length) % state.results.length;
+  if (!state.displayResults.length) return;
+  state.selectedIndex = (state.selectedIndex + delta + state.displayResults.length) % state.displayResults.length;
   renderSelection(true);
 }
 
@@ -218,6 +223,7 @@ async function setGroupMode(mode: GroupMode): Promise<void> {
   elements.groupWindow.setAttribute("aria-pressed", String(mode === "window"));
   elements.groupDomain.setAttribute("aria-pressed", String(mode === "domain"));
   await chrome.storage.sync.set({ groupMode: mode });
+  state.selectedIndex = 0;
   render();
 }
 
@@ -226,21 +232,14 @@ async function loadTabs(): Promise<void> {
   elements.summary.textContent = "Reading open Chrome windows…";
 
   try {
-    const browserWindows = await chrome.windows.getAll({
-      populate: true,
-      windowTypes: ["normal"]
-    });
-
+    const browserWindows = await chrome.windows.getAll({ populate: true, windowTypes: ["normal"] });
     state.tabs = [];
     state.windowLabels.clear();
 
     let ordinal = 1;
     for (const browserWindow of browserWindows) {
       if (typeof browserWindow.id !== "number") continue;
-      state.windowLabels.set(
-        browserWindow.id,
-        `Window ${ordinal}${browserWindow.focused ? " · Current" : ""}`
-      );
+      state.windowLabels.set(browserWindow.id, `Window ${ordinal}${browserWindow.focused ? " · Current" : ""}`);
       ordinal += 1;
 
       for (const tab of browserWindow.tabs || []) {
@@ -269,11 +268,14 @@ async function loadTabs(): Promise<void> {
   } catch (error) {
     state.tabs = [];
     state.results = [];
+    state.displayResults = [];
     elements.results.replaceChildren();
     elements.results.hidden = true;
     elements.empty.hidden = false;
-    elements.empty.querySelector("strong")!.textContent = "Unable to read tabs";
-    elements.empty.querySelector("p")!.textContent = error instanceof Error ? error.message : "Chrome did not return the current tab list.";
+    const heading = elements.empty.querySelector("strong");
+    const copy = elements.empty.querySelector("p");
+    if (heading) heading.textContent = "Unable to read tabs";
+    if (copy) copy.textContent = error instanceof Error ? error.message : "Chrome did not return the current tab list.";
     elements.summary.textContent = "Tab loading failed.";
   } finally {
     elements.refresh.disabled = false;
@@ -295,7 +297,7 @@ function bindEvents(): void {
       moveSelection(-1);
     } else if (event.key === "Enter") {
       event.preventDefault();
-      const selected = state.results[state.selectedIndex];
+      const selected = state.displayResults[state.selectedIndex];
       if (selected) void activateTab(selected.tab);
     } else if (event.key === "Escape") {
       event.preventDefault();
