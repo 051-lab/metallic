@@ -21,7 +21,7 @@
 
     <label class="search-box" for="searchInput">
       <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg>
-      <input id="searchInput" type="search" autocomplete="off" spellcheck="false" placeholder="Search titles, domains, or URLs…">
+      <input id="searchInput" type="search" autocomplete="off" spellcheck="false" placeholder="Search titles, domains, or URLs…" aria-controls="results" aria-autocomplete="list">
       <kbd>/</kbd>
     </label>
 
@@ -30,9 +30,14 @@
         <button class="segment is-active" id="groupWindow" type="button" data-mode="window" aria-pressed="true">Windows</button>
         <button class="segment" id="groupDomain" type="button" data-mode="domain" aria-pressed="false">Domains</button>
       </div>
-      <button class="icon-button" id="refreshButton" type="button" title="Refresh open tabs" aria-label="Refresh open tabs">
-        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7"/></svg>
-      </button>
+      <div class="toolbar-actions">
+        <button class="filter-button" id="duplicateOnly" type="button" aria-pressed="false">
+          Duplicates <span id="duplicateCount">0</span>
+        </button>
+        <button class="icon-button" id="refreshButton" type="button" title="Refresh open tabs" aria-label="Refresh open tabs">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7"/></svg>
+        </button>
+      </div>
     </div>
 
     <div class="summary" id="summary" aria-live="polite">Loading open tabs…</div>
@@ -48,6 +53,7 @@
     <footer class="shortcut-bar" aria-label="Keyboard shortcuts">
       <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
       <span><kbd>Enter</kbd> switch</span>
+      <span><kbd>Alt</kbd>+<kbd>D</kbd> duplicates</span>
       <span><kbd>Esc</kbd> clear</span>
     </footer>
   </div>
