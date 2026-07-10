@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Metallic Tab Finder</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">⌁</span>
+        <div>
+          <h1>Tab Finder</h1>
+          <p>Metallic workspace utility</p>
+        </div>
+      </div>
+      <span class="window-badge" id="windowBadge">— windows</span>
+    </header>
+
+    <label class="search-box" for="searchInput">
+      <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg>
+      <input id="searchInput" type="search" autocomplete="off" spellcheck="false" placeholder="Search titles, domains, or URLs…">
+      <kbd>/</kbd>
+    </label>
+
+    <div class="toolbar">
+      <div class="segmented" role="group" aria-label="Group tabs by">
+        <button class="segment is-active" id="groupWindow" type="button" data-mode="window" aria-pressed="true">Windows</button>
+        <button class="segment" id="groupDomain" type="button" data-mode="domain" aria-pressed="false">Domains</button>
+      </div>
+      <button class="icon-button" id="refreshButton" type="button" title="Refresh open tabs" aria-label="Refresh open tabs">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7"/></svg>
+      </button>
+    </div>
+
+    <div class="summary" id="summary" aria-live="polite">Loading open tabs…</div>
+
+    <main class="results" id="results" role="listbox" aria-label="Open tabs"></main>
+
+    <div class="empty-state" id="emptyState" hidden>
+      <span aria-hidden="true">◇</span>
+      <strong>No matching tabs</strong>
+      <p>Try a title, domain, or a shorter fuzzy search.</p>
+    </div>
+
+    <footer class="shortcut-bar" aria-label="Keyboard shortcuts">
+      <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+      <span><kbd>Enter</kbd> switch</span>
+      <span><kbd>Esc</kbd> clear</span>
+    </footer>
+  </div>
+  <script src="dist/popup.js"></script>
+</body>
+</html>
