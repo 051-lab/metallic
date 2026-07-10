@@ -4,6 +4,10 @@ Metallic Tab Finder is a keyboard-first Manifest V3 extension for finding and sw
 
 It is intentionally smaller than a session manager or workspace dashboard. The extension solves one focused problem: when many tabs are spread across several windows, locate the right tab immediately without clicking through each window.
 
+## v0.2.1 Fix
+
+- Fixed keyboard and click activation across browser windows. Tab Finder now activates the selected tab before focusing its window, preventing Chrome from closing the popup before the activation request is sent.
+
 ## Features
 
 - Search open tab titles, domains, and URLs.
@@ -29,7 +33,7 @@ It is intentionally smaller than a session manager or workspace dashboard. The e
 extensions/tab-finder
 ```
 
-The committed `dist/popup.js` bundle makes the branch directly loadable without a local build.
+The committed runtime bundles make the branch directly loadable without a local build.
 
 ## Keyboard Controls
 
@@ -37,7 +41,7 @@ The committed `dist/popup.js` bundle makes the branch directly loadable without 
 - `Arrow Up` / `Arrow Down`: move through visible results.
 - `Page Up` / `Page Down`: move eight results at a time.
 - `Home` / `End`: jump to the first or last result.
-- `Enter`: focus the selected tab and its browser window.
+- `Enter`: activate the selected tab, then focus its browser window.
 - `Alt+D`: toggle the duplicate-only filter.
 - `Escape`: clear the query, then clear the duplicate filter, then close the popup.
 - `/`: return focus to the search box.
@@ -61,7 +65,7 @@ Available scripts:
 - `npm run build`: bundle TypeScript sources into `dist/`.
 - `npm run watch`: rebuild during development.
 - `npm run typecheck`: run strict TypeScript validation.
-- `npm test`: run search, recency, and duplicate-detection unit tests.
+- `npm test`: run search, recency, duplicate-detection, and activation-order unit tests.
 - `npm run package`: validate and stage a runtime package under `release/tab-finder`.
 
 ## Test Plan
@@ -71,11 +75,12 @@ Available scripts:
 3. Verify every normal-window tab appears with its title and domain.
 4. Search by exact title, partial title, domain, and fuzzy multi-token query.
 5. Switch grouping between Windows and Domains, close and reopen the popup, and verify the preference persists.
-6. Use arrows, Page Up/Down, Home/End, and Enter to navigate and switch tabs.
-7. Open the same URL more than once and verify indicators, counts, and the duplicate-only filter.
-8. Create, close, move, or activate tabs while the popup is open and verify the list refreshes without losing the selected tab when possible.
-9. Verify pinned, audible, and discarded tabs receive the expected state chips.
-10. With an empty query, verify recently accessed tabs appear ahead of older inactive tabs.
+6. Use arrows, Page Up/Down, Home/End, and Enter to navigate and switch tabs, including a tab in another browser window.
+7. Click a result in another browser window and verify the correct tab becomes active.
+8. Open the same URL more than once and verify indicators, counts, and the duplicate-only filter.
+9. Create, close, move, or activate tabs while the popup is open and verify the list refreshes without losing the selected tab when possible.
+10. Verify pinned, audible, and discarded tabs receive the expected state chips.
+11. With an empty query, verify recently accessed tabs appear ahead of older inactive tabs.
 
 ## Next Roadmap
 
