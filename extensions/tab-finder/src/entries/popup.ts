@@ -1,3 +1,4 @@
+import { activateThenFocus } from "../core/tab-activation";
 import {
   domainForUrl,
   duplicateCounts,
@@ -265,8 +266,17 @@ function render(preferredTabId?: number): void {
 
 async function activateTab(tab: TabCandidate): Promise<void> {
   try {
-    await chrome.windows.update(tab.windowId, { focused: true });
-    await chrome.tabs.update(tab.id, { active: true });
+    await activateThenFocus(
+      {
+        activateTab: async (tabId) => {
+          await chrome.tabs.update(tabId, { active: true });
+        },
+        focusWindow: async (windowId) => {
+          await chrome.windows.update(windowId, { focused: true });
+        }
+      },
+      tab
+    );
     window.close();
   } catch (error) {
     elements.summary.textContent = error instanceof Error ? error.message : "The tab could not be activated.";
