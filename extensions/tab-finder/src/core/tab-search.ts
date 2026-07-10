@@ -10,6 +10,7 @@ export interface TabCandidate {
   pinned: boolean;
   audible: boolean;
   discarded: boolean;
+  lastAccessed?: number;
 }
 
 export interface TabSearchResult {
@@ -64,9 +65,23 @@ function scoreField(rawValue: string, token: string, weight: number): number {
   return fuzzy ? fuzzy + Math.floor(weight / 3) : 0;
 }
 
-export function scoreTab(tab: TabCandidate, query: string): number {
+export function recencyBoost(lastAccessed: number | undefined, now = Date.now()): number {
+  if (!lastAccessed || !Number.isFinite(lastAccessed)) return 0;
+  const age = Math.max(0, now - lastAccessed);
+  if (age <= 5 * 60_000) return 24;
+  if (age <= 60 * 60_000) return 18;
+  if (age <= 24 * 60 * 60_000) return 12;
+  if (age <= 7 * 24 * 60 * 60_000) return 6;
+  return 0;
+}
+
+export function scoreTab(tab: TabCandidate, query: string, now = Date.now()): number {
   const tokens = normalize(query).split(" ").filter(Boolean);
-  if (!tokens.length) return 0;
+  const recent = recencyBoost(tab.lastAccessed, now);
+
+  if (!tokens.length) {
+    return (tab.active ? 40 : 0) + (tab.pinned ? 4 : 0) + recent;
+  }
 
   let score = 0;
   for (const token of tokens) {
@@ -81,16 +96,17 @@ export function scoreTab(tab: TabCandidate, query: string): number {
 
   if (tab.active) score += 5;
   if (tab.pinned) score += 2;
+  score += Math.min(6, Math.floor(recent / 4));
   return score;
 }
 
-export function searchTabs(tabs: TabCandidate[], query: string): TabSearchResult[] {
+export function searchTabs(tabs: TabCandidate[], query: string, now = Date.now()): TabSearchResult[] {
   const normalizedQuery = normalize(query);
   return tabs
-    .map((tab) => ({ tab, score: scoreTab(tab, normalizedQuery) }))
+    .map((tab) => ({ tab, score: scoreTab(tab, normalizedQuery, now) }))
     .filter((result) => Number.isFinite(result.score))
     .sort((left, right) => {
-      if (normalizedQuery && right.score !== left.score) return right.score - left.score;
+      if (right.score !== left.score) return right.score - left.score;
       if (left.tab.windowId !== right.tab.windowId) return left.tab.windowId - right.tab.windowId;
       return left.tab.index - right.tab.index;
     });
