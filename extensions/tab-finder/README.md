@@ -2,13 +2,16 @@
 
 Metallic Tab Finder is a keyboard-first Manifest V3 extension for finding and switching to any open tab across every normal Chrome window.
 
-It is intentionally smaller than a session manager or workspace dashboard. The MVP solves one focused problem: when many tabs are spread across several windows, locate the right tab immediately without clicking through each window.
+It is intentionally smaller than a session manager or workspace dashboard. The extension solves one focused problem: when many tabs are spread across several windows, locate the right tab immediately without clicking through each window.
 
-## MVP Features
+## Features
 
 - Search open tab titles, domains, and URLs.
 - Fuzzy multi-token matching with domain-aware ranking.
+- Rank idle results using Chrome's recent tab activity while keeping active and pinned tabs prominent.
 - View tabs grouped by Chrome window or website domain.
+- Filter the list to tabs whose URLs are open more than once.
+- Keep the popup current when tabs or windows are created, closed, moved, updated, or activated.
 - Switch to a result with one click or the keyboard.
 - Show favicons and active, pinned, audible, sleeping, and duplicate states.
 - Count open windows, matching tabs, and duplicate copies.
@@ -32,13 +35,16 @@ The committed `dist/popup.js` bundle makes the branch directly loadable without 
 
 - Type to search.
 - `Arrow Up` / `Arrow Down`: move through visible results.
+- `Page Up` / `Page Down`: move eight results at a time.
+- `Home` / `End`: jump to the first or last result.
 - `Enter`: focus the selected tab and its browser window.
-- `Escape`: clear the query; press again to close the popup.
+- `Alt+D`: toggle the duplicate-only filter.
+- `Escape`: clear the query, then clear the duplicate filter, then close the popup.
 - `/`: return focus to the search box.
 
 ## Permissions
 
-- `tabs`: read tab titles, URLs, state, and window membership, then activate the selected tab.
+- `tabs`: read tab titles, URLs, state, recent-access timestamps, and window membership, then activate the selected tab.
 - `storage`: remember the window/domain grouping preference.
 
 No host permissions or page content scripts are requested.
@@ -55,24 +61,25 @@ Available scripts:
 - `npm run build`: bundle TypeScript sources into `dist/`.
 - `npm run watch`: rebuild during development.
 - `npm run typecheck`: run strict TypeScript validation.
-- `npm test`: run the search and duplicate-detection unit tests.
+- `npm test`: run search, recency, and duplicate-detection unit tests.
 - `npm run package`: validate and stage a runtime package under `release/tab-finder`.
 
-## MVP Test Plan
+## Test Plan
 
 1. Open tabs across at least two Chrome windows.
 2. Load the extension and open its popup.
 3. Verify every normal-window tab appears with its title and domain.
 4. Search by exact title, partial title, domain, and fuzzy multi-token query.
 5. Switch grouping between Windows and Domains, close and reopen the popup, and verify the preference persists.
-6. Use arrow keys and Enter to switch to a tab in another window.
-7. Open the same URL more than once and verify duplicate indicators and counts appear.
-8. Verify pinned, audible, and discarded tabs receive the expected state chips.
+6. Use arrows, Page Up/Down, Home/End, and Enter to navigate and switch tabs.
+7. Open the same URL more than once and verify indicators, counts, and the duplicate-only filter.
+8. Create, close, move, or activate tabs while the popup is open and verify the list refreshes without losing the selected tab when possible.
+9. Verify pinned, audible, and discarded tabs receive the expected state chips.
+10. With an empty query, verify recently accessed tabs appear ahead of older inactive tabs.
 
 ## Next Roadmap
 
-- Close or merge duplicate tabs from the results list.
-- Add optional recent-tab ranking.
-- Add a command palette mode for mute, pin, close, and move operations.
+- Add opt-in tab actions such as mute, pin, close, and move.
+- Add a confirmation-based action for closing redundant duplicate copies.
 - Support user-defined aliases for frequently used domains.
 - Explore integration points with Metallic Workspace Forge without merging the two extensions' responsibilities.
