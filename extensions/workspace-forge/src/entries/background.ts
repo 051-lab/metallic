@@ -1,4 +1,5 @@
 import type {
+  SavedTab,
   Workspace,
   WorkspaceColor,
   WorkspaceForgeState,
@@ -18,6 +19,7 @@ import {
   workspaceById
 } from "../core/state";
 import { matchingOpenTabIds, savedTabFromChrome, savedTabsFromChrome } from "../core/tabs";
+import { initializeBackground, runBackgroundTask } from "../core/background-lifecycle";
 
 const STORAGE_KEY = "workspaceForgeState";
 
@@ -56,9 +58,14 @@ async function lastFocusedWindow(): Promise<chrome.windows.Window> {
 }
 
 async function openSidePanel(windowId?: number): Promise<{ windowId: number }> {
+  const sidePanel = chrome.sidePanel as typeof chrome.sidePanel | undefined;
+  if (!sidePanel?.open) {
+    throw new Error("Workspace Forge requires Chrome 116 or newer for Side Panel support.");
+  }
+
   const targetId = windowId ?? (await lastFocusedWindow()).id;
   if (typeof targetId !== "number") throw new Error("No Chrome window is available.");
-  await chrome.sidePanel.open({ windowId: targetId });
+  await sidePanel.open({ windowId: targetId });
   return { windowId: targetId };
 }
 
@@ -177,13 +184,27 @@ async function handleMessage(message: WorkspaceRequest): Promise<unknown> {
   }
 }
 
+function reportBackgroundError(context: string, error: unknown): void {
+  console.error(`Workspace Forge ${context} failed:`, error);
+}
+
+function initializeWorker(): Promise<void> {
+  const sidePanel = chrome.sidePanel as typeof chrome.sidePanel | undefined;
+  return initializeBackground(readState, sidePanel);
+}
+
 chrome.runtime.onInstalled.addListener(() => {
-  void readState();
-  void chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false });
+  void runBackgroundTask("installation", initializeWorker, reportBackgroundError);
+});
+
+chrome.runtime.onStartup.addListener(() => {
+  void runBackgroundTask("startup", initializeWorker, reportBackgroundError);
 });
 
 chrome.commands.onCommand.addListener((command) => {
-  if (command === "open-workspace-forge") void openSidePanel();
+  if (command === "open-workspace-forge") {
+    void runBackgroundTask("keyboard shortcut", () => openSidePanel(), reportBackgroundError);
+  }
 });
 
 chrome.runtime.onMessage.addListener((
@@ -194,7 +215,7 @@ chrome.runtime.onMessage.addListener((
   void handleMessage(message)
     .then((result) => sendResponse({ ok: true, result }))
     .catch((error: unknown) => {
-      console.error("Workspace Forge error:", error);
+      console.warn("Workspace Forge request failed:", error);
       sendResponse({
         ok: false,
         error: error instanceof Error ? error.message : String(error)
