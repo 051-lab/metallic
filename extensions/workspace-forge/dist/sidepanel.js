@@ -1,21 +1,357 @@
-"use strict";(()=>{var T=[{id:"chrome-extension-dev",name:"Chrome Extension Dev",description:"Repository, Chrome APIs, testing, and local preview tabs.",color:"blue",notes:"Keep implementation decisions, browser constraints, and test findings here.",nextAction:"Define the smallest testable extension milestone.",tasks:["Review manifest permissions","Run typecheck and tests","Load unpacked in Chrome"]},{id:"ai-research-sprint",name:"AI Research Sprint",description:"Sources, model tools, notes, and synthesis tasks.",color:"purple",notes:"Capture claims, source quality, open questions, and synthesis notes.",nextAction:"Write the research question and evidence standard.",tasks:["Collect primary sources","Compare findings","Write a concise synthesis"]},{id:"app-build-session",name:"App Build Session",description:"Product planning, code, design references, and deployment.",color:"cyan",notes:"Track the product slice, architecture decisions, and validation results.",nextAction:"Choose the next vertical product slice.",tasks:["Review current state","Implement one slice","Validate build and user flow"]},{id:"sound-design-lab",name:"Sound Design Lab",description:"DSP research, references, plugin docs, and listening notes.",color:"orange",notes:"Document signal flow, parameter choices, listening results, and revisions.",nextAction:"Define the target sound and one measurable experiment.",tasks:["Collect references","Build the processing chain","Compare and document revisions"]},{id:"job-search-command-center",name:"Job Search Command Center",description:"Open roles, company research, applications, and follow-ups.",color:"green",notes:"Track role fit, company notes, contacts, application status, and follow-up dates.",nextAction:"Prioritize the strongest open role.",tasks:["Research the company","Tailor application materials","Schedule follow-up"]}];function w(e){return T.find(t=>t.id===e)}function s(e){let t=document.getElementById(e);if(!t)throw new Error(`Missing side panel element: ${e}`);return t}var n={workspaceList:s("workspaceList"),empty:s("emptyState"),editor:s("editor"),title:s("workspaceTitle"),color:s("workspaceColor"),notes:s("workspaceNotes"),nextAction:s("workspaceNextAction"),tabs:s("savedTabs"),tasks:s("taskList"),newTask:s("newTask"),status:s("status"),template:s("templateSelect"),importFile:s("importFile")},a={version:3,activeWorkspaceId:null,workspaces:[]};async function c(e){let t=await chrome.runtime.sendMessage(e);if(!t.ok)throw new Error(t.error||"Workspace Forge request failed.");return t.result}function p(){return a.workspaces.find(e=>e.id===a.activeWorkspaceId)}function r(e,t=!1){n.status.textContent=e,n.status.classList.toggle("is-error",t)}function m(e){let t=document.createElement("span");return t.textContent=e,t.innerHTML}function v(){n.workspaceList.replaceChildren();for(let e of a.workspaces){let t=document.createElement("button");t.type="button",t.className="workspace-card",t.classList.toggle("is-active",e.id===a.activeWorkspaceId),t.dataset.workspaceId=e.id,t.innerHTML=`
-      <span class="color-dot color-${e.color}"></span>
+"use strict";
+(() => {
+  // src/core/templates.ts
+  var WORKSPACE_TEMPLATES = [
+    {
+      id: "chrome-extension-dev",
+      name: "Chrome Extension Dev",
+      description: "Repository, Chrome APIs, testing, and local preview tabs.",
+      color: "blue",
+      notes: "Keep implementation decisions, browser constraints, and test findings here.",
+      nextAction: "Define the smallest testable extension milestone.",
+      tasks: ["Review manifest permissions", "Run typecheck and tests", "Load unpacked in Chrome"]
+    },
+    {
+      id: "ai-research-sprint",
+      name: "AI Research Sprint",
+      description: "Sources, model tools, notes, and synthesis tasks.",
+      color: "purple",
+      notes: "Capture claims, source quality, open questions, and synthesis notes.",
+      nextAction: "Write the research question and evidence standard.",
+      tasks: ["Collect primary sources", "Compare findings", "Write a concise synthesis"]
+    },
+    {
+      id: "app-build-session",
+      name: "App Build Session",
+      description: "Product planning, code, design references, and deployment.",
+      color: "cyan",
+      notes: "Track the product slice, architecture decisions, and validation results.",
+      nextAction: "Choose the next vertical product slice.",
+      tasks: ["Review current state", "Implement one slice", "Validate build and user flow"]
+    },
+    {
+      id: "sound-design-lab",
+      name: "Sound Design Lab",
+      description: "DSP research, references, plugin docs, and listening notes.",
+      color: "orange",
+      notes: "Document signal flow, parameter choices, listening results, and revisions.",
+      nextAction: "Define the target sound and one measurable experiment.",
+      tasks: ["Collect references", "Build the processing chain", "Compare and document revisions"]
+    },
+    {
+      id: "job-search-command-center",
+      name: "Job Search Command Center",
+      description: "Open roles, company research, applications, and follow-ups.",
+      color: "green",
+      notes: "Track role fit, company notes, contacts, application status, and follow-up dates.",
+      nextAction: "Prioritize the strongest open role.",
+      tasks: ["Research the company", "Tailor application materials", "Schedule follow-up"]
+    }
+  ];
+  function templateById(templateId) {
+    return WORKSPACE_TEMPLATES.find((template) => template.id === templateId);
+  }
+
+  // src/entries/sidepanel.ts
+  function required(id) {
+    const element = document.getElementById(id);
+    if (!element) throw new Error(`Missing side panel element: ${id}`);
+    return element;
+  }
+  var elements = {
+    workspaceList: required("workspaceList"),
+    empty: required("emptyState"),
+    editor: required("editor"),
+    title: required("workspaceTitle"),
+    color: required("workspaceColor"),
+    notes: required("workspaceNotes"),
+    nextAction: required("workspaceNextAction"),
+    tabs: required("savedTabs"),
+    tasks: required("taskList"),
+    newTask: required("newTask"),
+    status: required("status"),
+    template: required("templateSelect"),
+    importFile: required("importFile")
+  };
+  var state = { version: 3, activeWorkspaceId: null, workspaces: [] };
+  async function send(message) {
+    const response = await chrome.runtime.sendMessage(message);
+    if (!response.ok) throw new Error(response.error || "Workspace Forge request failed.");
+    return response.result;
+  }
+  function activeWorkspace() {
+    return state.workspaces.find((workspace) => workspace.id === state.activeWorkspaceId);
+  }
+  function showStatus(message, error = false) {
+    elements.status.textContent = message;
+    elements.status.classList.toggle("is-error", error);
+  }
+  function escapeText(value) {
+    const span = document.createElement("span");
+    span.textContent = value;
+    return span.innerHTML;
+  }
+  function renderWorkspaceList() {
+    elements.workspaceList.replaceChildren();
+    for (const workspace of state.workspaces) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "workspace-card";
+      button.classList.toggle("is-active", workspace.id === state.activeWorkspaceId);
+      button.dataset.workspaceId = workspace.id;
+      button.innerHTML = `
+      <span class="color-dot color-${workspace.color}"></span>
       <span class="workspace-card-copy">
-        <strong>${m(e.name)}</strong>
-        <small>${e.tabs.length} tabs \xB7 ${e.tasks.filter(o=>!o.done).length} open tasks</small>
+        <strong>${escapeText(workspace.name)}</strong>
+        <small>${workspace.tabs.length} tabs \xB7 ${workspace.tasks.filter((task) => !task.done).length} open tasks</small>
       </span>
-    `,t.addEventListener("click",async()=>{a=await c({type:"SET_ACTIVE_WORKSPACE",workspaceId:e.id}),l()}),n.workspaceList.append(t)}}function f(e){try{return new URL(e).hostname.slice(0,1).toUpperCase()||"\u2022"}catch{return"\u2022"}}function y(e){if(n.tabs.replaceChildren(),!e.tabs.length){n.tabs.innerHTML='<p class="muted empty-copy">No tabs saved yet.</p>';return}for(let t of e.tabs){let o=document.createElement("div");o.className="saved-row",o.innerHTML=`
-      <span class="favicon">${m(f(t.url))}</span>
+    `;
+      button.addEventListener("click", async () => {
+        state = await send({
+          type: "SET_ACTIVE_WORKSPACE",
+          workspaceId: workspace.id
+        });
+        render();
+      });
+      elements.workspaceList.append(button);
+    }
+  }
+  function hostnameInitial(urlValue) {
+    try {
+      return new URL(urlValue).hostname.slice(0, 1).toUpperCase() || "\u2022";
+    } catch {
+      return "\u2022";
+    }
+  }
+  function renderTabs(workspace) {
+    elements.tabs.replaceChildren();
+    if (!workspace.tabs.length) {
+      elements.tabs.innerHTML = '<p class="muted empty-copy">No tabs saved yet.</p>';
+      return;
+    }
+    for (const tab of workspace.tabs) {
+      const row = document.createElement("div");
+      row.className = "saved-row";
+      row.innerHTML = `
+      <span class="favicon">${escapeText(hostnameInitial(tab.url))}</span>
       <span class="saved-copy">
-        <strong title="${m(t.url)}">${m(t.title)}</strong>
-        <small>${m(t.url)}</small>
+        <strong title="${escapeText(tab.url)}">${escapeText(tab.title)}</strong>
+        <small>${escapeText(tab.url)}</small>
       </span>
-      <label class="pin-toggle"><input type="checkbox" ${t.pinned?"checked":""}> Pin</label>
+      <label class="pin-toggle"><input type="checkbox" ${tab.pinned ? "checked" : ""}> Pin</label>
       <button class="row-action" type="button" aria-label="Remove saved tab">\xD7</button>
-    `;let i=o.querySelector("input"),E=o.querySelector("button");i?.addEventListener("change",()=>{let d=e.tabs.map(u=>u.id===t.id?{...u,pinned:!!i.checked}:u);k({tabs:d})}),E?.addEventListener("click",()=>{k({tabs:e.tabs.filter(d=>d.id!==t.id)})}),n.tabs.append(o)}}function L(e){if(n.tasks.replaceChildren(),!e.tasks.length){n.tasks.innerHTML='<p class="muted empty-copy">No tasks yet.</p>';return}for(let t of e.tasks){let o=document.createElement("div");o.className="task-row",o.innerHTML=`
+    `;
+      const checkbox = row.querySelector("input");
+      const remove = row.querySelector("button");
+      checkbox?.addEventListener("change", () => {
+        const tabs = workspace.tabs.map(
+          (candidate) => candidate.id === tab.id ? { ...candidate, pinned: Boolean(checkbox.checked) } : candidate
+        );
+        void updateWorkspace({ tabs });
+      });
+      remove?.addEventListener("click", () => {
+        void updateWorkspace({ tabs: workspace.tabs.filter((candidate) => candidate.id !== tab.id) });
+      });
+      elements.tabs.append(row);
+    }
+  }
+  function renderTasks(workspace) {
+    elements.tasks.replaceChildren();
+    if (!workspace.tasks.length) {
+      elements.tasks.innerHTML = '<p class="muted empty-copy">No tasks yet.</p>';
+      return;
+    }
+    for (const task of workspace.tasks) {
+      const row = document.createElement("div");
+      row.className = "task-row";
+      row.innerHTML = `
       <label>
-        <input type="checkbox" ${t.done?"checked":""}>
-        <span class="${t.done?"is-done":""}">${m(t.text)}</span>
+        <input type="checkbox" ${task.done ? "checked" : ""}>
+        <span class="${task.done ? "is-done" : ""}">${escapeText(task.text)}</span>
       </label>
       <button class="row-action" type="button" aria-label="Delete task">\xD7</button>
-    `;let i=o.querySelector("input"),E=o.querySelector("button");i?.addEventListener("change",()=>{let d=e.tasks.map(u=>u.id===t.id?{...u,done:!!i.checked}:u);k({tasks:d})}),E?.addEventListener("click",()=>{k({tasks:e.tasks.filter(d=>d.id!==t.id)})}),n.tasks.append(o)}}function b(){let e=p();n.empty.hidden=!!e,n.editor.hidden=!e,e&&(n.title.value=e.name,n.color.value=e.color,n.notes.value=e.notes,n.nextAction.value=e.nextAction,y(e),L(e))}function l(){v(),b()}async function g(){a=await c({type:"GET_STATE"}),l()}async function k(e){let t=p();if(t)try{a=await c({type:"UPDATE_WORKSPACE",workspaceId:t.id,patch:e}),l(),r("Workspace saved.")}catch(o){r(o instanceof Error?o.message:"Unable to save workspace.",!0)}}function h(){for(let e of T){let t=document.createElement("option");t.value=e.id,t.textContent=e.name,n.template.append(t)}}s("createBlank").addEventListener("click",async()=>{a=await c({type:"CREATE_WORKSPACE",payload:{name:"New Workspace",color:"grey"}}),l(),r("Created a new workspace.")});s("createTemplate").addEventListener("click",async()=>{let e=w(n.template.value);if(!e)return;let t=Date.now(),o=e.tasks.map((i,E)=>({id:`template-task-${t}-${E}`,text:i,done:!1,createdAt:t}));a=await c({type:"CREATE_WORKSPACE",payload:{name:e.name,color:e.color,notes:e.notes,nextAction:e.nextAction,tasks:o}}),l(),r(`Created ${e.name}.`)});s("saveDetails").addEventListener("click",()=>{k({name:n.title.value.trim()||"Untitled Workspace",color:n.color.value,notes:n.notes.value,nextAction:n.nextAction.value})});s("addTask").addEventListener("click",()=>{let e=p(),t=n.newTask.value.trim();if(!e||!t)return;let o={id:`task-${Date.now()}-${Math.random().toString(36).slice(2)}`,text:t,done:!1,createdAt:Date.now()};n.newTask.value="",k({tasks:[...e.tasks,o]})});s("addCurrentTab").addEventListener("click",async()=>{let e=p();e&&(a=await c({type:"ADD_CURRENT_TAB",workspaceId:e.id}),l(),r("Added the active tab."))});s("replaceTabs").addEventListener("click",async()=>{let e=p();e&&(a=await c({type:"REPLACE_TABS_FROM_WINDOW",workspaceId:e.id}),l(),r("Replaced saved tabs from the current window."))});s("openWorkspace").addEventListener("click",async()=>{let e=p();if(!e)return;let t=await c({type:"OPEN_WORKSPACE",workspaceId:e.id});r(`Opened ${t.tabCount} tabs in a new window.`)});s("closeWorkspaceTabs").addEventListener("click",async()=>{let e=p();if(!e)return;let t=await c({type:"CLOSE_WORKSPACE_TABS",workspaceId:e.id});r(`Closed ${t.closed} matching tab${t.closed===1?"":"s"}.`)});s("deleteWorkspace").addEventListener("click",async()=>{let e=p();!e||!confirm(`Delete \u201C${e.name}\u201D?`)||(a=await c({type:"DELETE_WORKSPACE",workspaceId:e.id}),l(),r("Workspace deleted."))});s("exportState").addEventListener("click",async()=>{let e=await c({type:"EXPORT_STATE"}),t=new Blob([JSON.stringify(e,null,2)],{type:"application/json"}),o=URL.createObjectURL(t),i=document.createElement("a");i.href=o,i.download=`workspace-forge-${new Date().toISOString().slice(0,10)}.json`,i.click(),URL.revokeObjectURL(o)});s("importState").addEventListener("click",()=>n.importFile.click());n.importFile.addEventListener("change",async()=>{let e=n.importFile.files?.[0];if(e)try{let t=JSON.parse(await e.text());a=await c({type:"IMPORT_STATE",payload:t,mode:"merge"}),l(),r("Imported workspace data.")}catch(t){r(t instanceof Error?t.message:"Unable to import workspace data.",!0)}finally{n.importFile.value=""}});h();g().catch(e=>{r(e instanceof Error?e.message:"Unable to load Workspace Forge.",!0)});})();
+    `;
+      const checkbox = row.querySelector("input");
+      const remove = row.querySelector("button");
+      checkbox?.addEventListener("change", () => {
+        const tasks = workspace.tasks.map(
+          (candidate) => candidate.id === task.id ? { ...candidate, done: Boolean(checkbox.checked) } : candidate
+        );
+        void updateWorkspace({ tasks });
+      });
+      remove?.addEventListener("click", () => {
+        void updateWorkspace({ tasks: workspace.tasks.filter((candidate) => candidate.id !== task.id) });
+      });
+      elements.tasks.append(row);
+    }
+  }
+  function renderEditor() {
+    const workspace = activeWorkspace();
+    elements.empty.hidden = Boolean(workspace);
+    elements.editor.hidden = !workspace;
+    if (!workspace) return;
+    elements.title.value = workspace.name;
+    elements.color.value = workspace.color;
+    elements.notes.value = workspace.notes;
+    elements.nextAction.value = workspace.nextAction;
+    renderTabs(workspace);
+    renderTasks(workspace);
+  }
+  function render() {
+    renderWorkspaceList();
+    renderEditor();
+  }
+  async function load() {
+    state = await send({ type: "GET_STATE" });
+    render();
+  }
+  async function updateWorkspace(patch) {
+    const workspace = activeWorkspace();
+    if (!workspace) return;
+    try {
+      state = await send({
+        type: "UPDATE_WORKSPACE",
+        workspaceId: workspace.id,
+        patch
+      });
+      render();
+      showStatus("Workspace saved.");
+    } catch (error) {
+      showStatus(error instanceof Error ? error.message : "Unable to save workspace.", true);
+    }
+  }
+  function populateTemplates() {
+    for (const template of WORKSPACE_TEMPLATES) {
+      const option = document.createElement("option");
+      option.value = template.id;
+      option.textContent = template.name;
+      elements.template.append(option);
+    }
+  }
+  required("createBlank").addEventListener("click", async () => {
+    state = await send({
+      type: "CREATE_WORKSPACE",
+      payload: { name: "New Workspace", color: "grey" }
+    });
+    render();
+    showStatus("Created a new workspace.");
+  });
+  required("createTemplate").addEventListener("click", async () => {
+    const template = templateById(elements.template.value);
+    if (!template) return;
+    const now = Date.now();
+    const tasks = template.tasks.map((task, index) => ({
+      id: `template-task-${now}-${index}`,
+      text: task,
+      done: false,
+      createdAt: now
+    }));
+    state = await send({
+      type: "CREATE_WORKSPACE",
+      payload: {
+        name: template.name,
+        color: template.color,
+        notes: template.notes,
+        nextAction: template.nextAction,
+        tasks
+      }
+    });
+    render();
+    showStatus(`Created ${template.name}.`);
+  });
+  required("saveDetails").addEventListener("click", () => {
+    void updateWorkspace({
+      name: elements.title.value.trim() || "Untitled Workspace",
+      color: elements.color.value,
+      notes: elements.notes.value,
+      nextAction: elements.nextAction.value
+    });
+  });
+  required("addTask").addEventListener("click", () => {
+    const workspace = activeWorkspace();
+    const taskText = elements.newTask.value.trim();
+    if (!workspace || !taskText) return;
+    const task = {
+      id: `task-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      text: taskText,
+      done: false,
+      createdAt: Date.now()
+    };
+    elements.newTask.value = "";
+    void updateWorkspace({ tasks: [...workspace.tasks, task] });
+  });
+  required("addCurrentTab").addEventListener("click", async () => {
+    const workspace = activeWorkspace();
+    if (!workspace) return;
+    state = await send({ type: "ADD_CURRENT_TAB", workspaceId: workspace.id });
+    render();
+    showStatus("Added the active tab.");
+  });
+  required("replaceTabs").addEventListener("click", async () => {
+    const workspace = activeWorkspace();
+    if (!workspace) return;
+    state = await send({
+      type: "REPLACE_TABS_FROM_WINDOW",
+      workspaceId: workspace.id
+    });
+    render();
+    showStatus("Replaced saved tabs from the current window.");
+  });
+  required("openWorkspace").addEventListener("click", async () => {
+    const workspace = activeWorkspace();
+    if (!workspace) return;
+    const result = await send({
+      type: "OPEN_WORKSPACE",
+      workspaceId: workspace.id
+    });
+    showStatus(`Opened ${result.tabCount} tabs in a new window.`);
+  });
+  required("closeWorkspaceTabs").addEventListener("click", async () => {
+    const workspace = activeWorkspace();
+    if (!workspace) return;
+    const result = await send({
+      type: "CLOSE_WORKSPACE_TABS",
+      workspaceId: workspace.id
+    });
+    showStatus(`Closed ${result.closed} matching tab${result.closed === 1 ? "" : "s"}.`);
+  });
+  required("deleteWorkspace").addEventListener("click", async () => {
+    const workspace = activeWorkspace();
+    if (!workspace || !confirm(`Delete \u201C${workspace.name}\u201D?`)) return;
+    state = await send({
+      type: "DELETE_WORKSPACE",
+      workspaceId: workspace.id
+    });
+    render();
+    showStatus("Workspace deleted.");
+  });
+  required("exportState").addEventListener("click", async () => {
+    const exported = await send({ type: "EXPORT_STATE" });
+    const blob = new Blob([JSON.stringify(exported, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `workspace-forge-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  });
+  required("importState").addEventListener("click", () => elements.importFile.click());
+  elements.importFile.addEventListener("change", async () => {
+    const file = elements.importFile.files?.[0];
+    if (!file) return;
+    try {
+      const payload = JSON.parse(await file.text());
+      state = await send({ type: "IMPORT_STATE", payload, mode: "merge" });
+      render();
+      showStatus("Imported workspace data.");
+    } catch (error) {
+      showStatus(error instanceof Error ? error.message : "Unable to import workspace data.", true);
+    } finally {
+      elements.importFile.value = "";
+    }
+  });
+  populateTemplates();
+  void load().catch((error) => {
+    showStatus(error instanceof Error ? error.message : "Unable to load Workspace Forge.", true);
+  });
+})();
