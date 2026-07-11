@@ -15,7 +15,7 @@ const options = {
   format: "iife",
   target: "chrome120",
   sourcemap: false,
-  minify: true,
+  minify: false,
   logLevel: "info"
 };
 
