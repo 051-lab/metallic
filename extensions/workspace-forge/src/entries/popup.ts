@@ -51,8 +51,14 @@ saveButton.addEventListener("click", async () => {
 openButton.addEventListener("click", async () => {
   openButton.disabled = true;
   try {
+    const sidePanel = chrome.sidePanel as typeof chrome.sidePanel | undefined;
+    if (!sidePanel?.open) {
+      throw new Error("Workspace Forge requires Chrome 116 or newer for Side Panel support.");
+    }
+
     const current = await chrome.windows.getCurrent();
-    await send({ type: "OPEN_SIDE_PANEL", windowId: current.id });
+    if (typeof current.id !== "number") throw new Error("No Chrome window is available.");
+    await sidePanel.open({ windowId: current.id });
     window.close();
   } catch (error) {
     showStatus(error instanceof Error ? error.message : "Unable to open the side panel.", true);
