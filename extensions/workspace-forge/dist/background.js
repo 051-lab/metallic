@@ -1,1 +1,393 @@
-"use strict";(()=>{var B=new Set(["grey","blue","cyan","green","yellow","orange","red","pink","purple"]),A=()=>({version:3,activeWorkspaceId:null,workspaces:[]});function p(e){let r=crypto.getRandomValues(new Uint32Array(2));return`${e}-${Date.now().toString(36)}-${r[0].toString(36)}${r[1].toString(36)}`}function l(e){return e&&typeof e=="object"?e:{}}function i(e,r=""){return typeof e=="string"?e.trim():r}function W(e,r){return typeof e=="number"&&Number.isFinite(e)?e:r}function K(e){return typeof e=="string"&&B.has(e)?e:"grey"}function m(e){try{let r=new URL(e);return r.hash="",r.hostname=r.hostname.toLowerCase(),r.pathname.length>1&&(r.pathname=r.pathname.replace(/\/+$/,"")),r.toString()}catch{return e.trim()}}function z(e,r=Date.now(),o=p){let t=l(e),a=i(t.url);return a?{id:i(t.id)||o("tab"),url:a,title:i(t.title)||a,favIconUrl:i(t.favIconUrl),pinned:!!t.pinned,group:i(t.group)||"General",savedAt:W(t.savedAt,r)}:null}function q(e,r=Date.now(),o=p){let t=typeof e=="string"?{text:e}:l(e),a=i(t.text);return a?{id:i(t.id)||o("task"),text:a,done:!!t.done,createdAt:W(t.createdAt,r)}:null}function b(e,r=Date.now(),o=p){let t=l(e),a=Array.isArray(t.tabs)?t.tabs.map(s=>z(s,r,o)).filter(s=>!!s):[],n=Array.isArray(t.tasks)?t.tasks.map(s=>q(s,r,o)).filter(s=>!!s):[];return{id:i(t.id)||o("workspace"),name:i(t.name)||"Untitled Workspace",color:K(t.color),status:t.status==="archived"?"archived":"active",notes:i(t.notes),nextAction:i(t.nextAction),createdAt:W(t.createdAt,r),updatedAt:W(t.updatedAt,r),tabs:a,tasks:n}}function h(e,r=Date.now(),o=p){let t=l(e),a=Array.isArray(t.workspaces)?t.workspaces.map(d=>b(d,r,o)):[],n=typeof t.activeWorkspaceId=="string"?t.activeWorkspaceId:null,s=n&&a.some(d=>d.id===n)?n:a[0]?.id??null;return{version:3,activeWorkspaceId:s,workspaces:a}}function k(e,r){let o=e.workspaces.find(t=>t.id===r);if(!o)throw new Error("Workspace not found.");return o}function E(e,r,o=Date.now(),t=p){let a=b({...l(r),id:void 0,createdAt:o,updatedAt:o},o,t);return{workspace:a,state:{...e,version:3,activeWorkspaceId:a.id,workspaces:[a,...e.workspaces]}}}function S(e,r,o,t=Date.now(),a=p){return k(e,r),{...e,workspaces:e.workspaces.map(n=>n.id===r?b({...n,...o,id:n.id,createdAt:n.createdAt,updatedAt:t},t,a):n)}}function _(e,r){let o=e.workspaces.filter(t=>t.id!==r);return{...e,activeWorkspaceId:e.activeWorkspaceId===r?o[0]?.id??null:e.activeWorkspaceId,workspaces:o}}function x(e,r){return r!==null&&k(e,r),{...e,activeWorkspaceId:r}}function O(e,r,o,t=Date.now()){return S(e,r,{tabs:o},t)}function D(e,r,o,t=Date.now()){let a=k(e,r),n=m(o.url),s=[o,...a.tabs.filter(d=>m(d.url)!==n)];return S(e,r,{tabs:s},t)}function N(e,r,o="merge",t=Date.now(),a=p){let s=l(r).state??r,d=l(s),R=Array.isArray(d.workspaces)?d.workspaces:Array.isArray(s)?s:[];if(!R.length)throw new Error("Import file does not contain any workspaces.");let y=o==="replace"?A():e,P=new Set(y.workspaces.map(T=>T.id)),F=R.map(T=>{let w=b(T,t,a);return P.has(w.id)&&(w.id=a("workspace")),w.updatedAt=t,P.add(w.id),w});return{version:3,activeWorkspaceId:F[0]?.id??y.activeWorkspaceId,workspaces:[...F,...y.workspaces]}}function I(e,r=Date.now(),o=p){let t=e.url?.trim();return t?{id:o("tab"),url:t,title:e.title?.trim()||t,favIconUrl:e.favIconUrl||"",pinned:!!e.pinned,group:"General",savedAt:r}:null}function v(e,r=Date.now(),o=p){return e.map(t=>I(t,r,o)).filter(t=>!!t)}function U(e,r){let o=new Set(e.map(t=>m(t.url)));return r.filter(t=>typeof t.id=="number"&&t.url&&o.has(m(t.url))).map(t=>t.id)}var f="workspaceForgeState",G={grey:"grey",blue:"blue",cyan:"cyan",green:"green",yellow:"yellow",orange:"orange",red:"red",pink:"pink",purple:"purple"};async function c(){let e=await chrome.storage.local.get(f),r=h(e[f]??A());return await chrome.storage.local.set({[f]:r}),r}async function u(e){let r=h(e);return await chrome.storage.local.set({[f]:r}),r}async function C(){let e=await chrome.windows.getLastFocused({populate:!0,windowTypes:["normal"]});if(typeof e.id!="number")throw new Error("No normal Chrome window is available.");return e}async function L(e){let r=e??(await C()).id;if(typeof r!="number")throw new Error("No Chrome window is available.");return await chrome.sidePanel.open({windowId:r}),{windowId:r}}async function V(e={}){let r=await C(),o=v(r.tabs||[]),t=await c(),a=E(t,{name:e.name?.trim()||`Workspace ${t.workspaces.length+1}`,color:e.color||"blue",tabs:o});return u(a.state)}async function M(e){let r=await C(),o=v(r.tabs||[]);return u(O(await c(),e,o))}async function $(e){let[r]=await chrome.tabs.query({active:!0,lastFocusedWindow:!0});if(!r)throw new Error("No active tab is available.");let o=I(r);if(!o)throw new Error("The active tab does not expose a URL.");return u(D(await c(),e,o))}async function X(e){let r=k(await c(),e);if(!r.tabs.length)throw new Error("This workspace has no saved tabs.");let o=await chrome.windows.create({url:r.tabs.map(n=>n.url)});if(typeof o.id!="number")throw new Error("Chrome did not return the restored window.");let t=o.tabs?.length?o.tabs:await chrome.tabs.query({windowId:o.id}),a=[];for(let[n,s]of t.entries()){if(typeof s.id!="number")continue;r.tabs[n]?.pinned?await chrome.tabs.update(s.id,{pinned:!0}):a.push(s.id)}if(a.length){let n=await chrome.tabs.group({tabIds:a,createProperties:{windowId:o.id}});await chrome.tabGroups.update(n,{title:r.name.slice(0,40),color:G[r.color],collapsed:!1})}return{windowId:o.id,tabCount:t.length}}async function j(e){let r=k(await c(),e),o=await chrome.tabs.query({}),t=U(r.tabs,o);return t.length&&await chrome.tabs.remove(t),{closed:t.length}}async function J(e){switch(e.type){case"GET_STATE":case"EXPORT_STATE":return c();case"OPEN_SIDE_PANEL":return L(e.windowId);case"CREATE_WORKSPACE":{let r=E(await c(),e.payload||{});return u(r.state)}case"UPDATE_WORKSPACE":return u(S(await c(),e.workspaceId,e.patch));case"DELETE_WORKSPACE":return u(_(await c(),e.workspaceId));case"SAVE_CURRENT_WINDOW":return V(e.payload);case"REPLACE_TABS_FROM_WINDOW":return M(e.workspaceId);case"ADD_CURRENT_TAB":return $(e.workspaceId);case"OPEN_WORKSPACE":return X(e.workspaceId);case"CLOSE_WORKSPACE_TABS":return j(e.workspaceId);case"SET_ACTIVE_WORKSPACE":return u(x(await c(),e.workspaceId));case"IMPORT_STATE":return u(N(await c(),e.payload,e.mode||"merge"));default:{let r=e;throw new Error(`Unsupported message: ${JSON.stringify(r)}`)}}}chrome.runtime.onInstalled.addListener(()=>{c(),chrome.sidePanel.setPanelBehavior({openPanelOnActionClick:!1})});chrome.commands.onCommand.addListener(e=>{e==="open-workspace-forge"&&L()});chrome.runtime.onMessage.addListener((e,r,o)=>(J(e).then(t=>o({ok:!0,result:t})).catch(t=>{console.error("Workspace Forge error:",t),o({ok:!1,error:t instanceof Error?t.message:String(t)})}),!0));})();
+"use strict";
+(() => {
+  // src/core/models.ts
+  var WORKSPACE_STATE_VERSION = 3;
+
+  // src/core/state.ts
+  var COLORS = /* @__PURE__ */ new Set([
+    "grey",
+    "blue",
+    "cyan",
+    "green",
+    "yellow",
+    "orange",
+    "red",
+    "pink",
+    "purple"
+  ]);
+  var emptyState = () => ({
+    version: WORKSPACE_STATE_VERSION,
+    activeWorkspaceId: null,
+    workspaces: []
+  });
+  function createId(prefix) {
+    const random = crypto.getRandomValues(new Uint32Array(2));
+    return `${prefix}-${Date.now().toString(36)}-${random[0].toString(36)}${random[1].toString(36)}`;
+  }
+  function record(value) {
+    return value && typeof value === "object" ? value : {};
+  }
+  function text(value, fallback = "") {
+    return typeof value === "string" ? value.trim() : fallback;
+  }
+  function finiteNumber(value, fallback) {
+    return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+  }
+  function color(value) {
+    return typeof value === "string" && COLORS.has(value) ? value : "grey";
+  }
+  function normalizeComparableUrl(value) {
+    try {
+      const url = new URL(value);
+      url.hash = "";
+      url.hostname = url.hostname.toLowerCase();
+      if (url.pathname.length > 1) url.pathname = url.pathname.replace(/\/+$/, "");
+      return url.toString();
+    } catch {
+      return value.trim();
+    }
+  }
+  function normalizeSavedTab(value, now = Date.now(), idFactory = createId) {
+    const source = record(value);
+    const url = text(source.url);
+    if (!url) return null;
+    return {
+      id: text(source.id) || idFactory("tab"),
+      url,
+      title: text(source.title) || url,
+      favIconUrl: text(source.favIconUrl),
+      pinned: Boolean(source.pinned),
+      group: text(source.group) || "General",
+      savedAt: finiteNumber(source.savedAt, now)
+    };
+  }
+  function normalizeTask(value, now = Date.now(), idFactory = createId) {
+    const source = typeof value === "string" ? { text: value } : record(value);
+    const taskText = text(source.text);
+    if (!taskText) return null;
+    return {
+      id: text(source.id) || idFactory("task"),
+      text: taskText,
+      done: Boolean(source.done),
+      createdAt: finiteNumber(source.createdAt, now)
+    };
+  }
+  function normalizeWorkspace(value, now = Date.now(), idFactory = createId) {
+    const source = record(value);
+    const tabs = Array.isArray(source.tabs) ? source.tabs.map((tab) => normalizeSavedTab(tab, now, idFactory)).filter((tab) => Boolean(tab)) : [];
+    const tasks = Array.isArray(source.tasks) ? source.tasks.map((task) => normalizeTask(task, now, idFactory)).filter((task) => Boolean(task)) : [];
+    return {
+      id: text(source.id) || idFactory("workspace"),
+      name: text(source.name) || "Untitled Workspace",
+      color: color(source.color),
+      status: source.status === "archived" ? "archived" : "active",
+      notes: text(source.notes),
+      nextAction: text(source.nextAction),
+      createdAt: finiteNumber(source.createdAt, now),
+      updatedAt: finiteNumber(source.updatedAt, now),
+      tabs,
+      tasks
+    };
+  }
+  function normalizeState(value, now = Date.now(), idFactory = createId) {
+    const source = record(value);
+    const workspaces = Array.isArray(source.workspaces) ? source.workspaces.map((workspace) => normalizeWorkspace(workspace, now, idFactory)) : [];
+    const requestedActiveId = typeof source.activeWorkspaceId === "string" ? source.activeWorkspaceId : null;
+    const activeWorkspaceId = requestedActiveId && workspaces.some((workspace) => workspace.id === requestedActiveId) ? requestedActiveId : workspaces[0]?.id ?? null;
+    return {
+      version: WORKSPACE_STATE_VERSION,
+      activeWorkspaceId,
+      workspaces
+    };
+  }
+  function workspaceById(state, workspaceId) {
+    const workspace = state.workspaces.find((candidate) => candidate.id === workspaceId);
+    if (!workspace) throw new Error("Workspace not found.");
+    return workspace;
+  }
+  function createWorkspaceInState(state, value, now = Date.now(), idFactory = createId) {
+    const workspace = normalizeWorkspace({
+      ...record(value),
+      id: void 0,
+      createdAt: now,
+      updatedAt: now
+    }, now, idFactory);
+    return {
+      workspace,
+      state: {
+        ...state,
+        version: WORKSPACE_STATE_VERSION,
+        activeWorkspaceId: workspace.id,
+        workspaces: [workspace, ...state.workspaces]
+      }
+    };
+  }
+  function updateWorkspaceInState(state, workspaceId, patch, now = Date.now(), idFactory = createId) {
+    workspaceById(state, workspaceId);
+    return {
+      ...state,
+      workspaces: state.workspaces.map(
+        (workspace) => workspace.id === workspaceId ? normalizeWorkspace({
+          ...workspace,
+          ...patch,
+          id: workspace.id,
+          createdAt: workspace.createdAt,
+          updatedAt: now
+        }, now, idFactory) : workspace
+      )
+    };
+  }
+  function deleteWorkspaceFromState(state, workspaceId) {
+    const workspaces = state.workspaces.filter((workspace) => workspace.id !== workspaceId);
+    return {
+      ...state,
+      activeWorkspaceId: state.activeWorkspaceId === workspaceId ? workspaces[0]?.id ?? null : state.activeWorkspaceId,
+      workspaces
+    };
+  }
+  function setActiveWorkspace(state, workspaceId) {
+    if (workspaceId !== null) workspaceById(state, workspaceId);
+    return { ...state, activeWorkspaceId: workspaceId };
+  }
+  function replaceWorkspaceTabs(state, workspaceId, tabs, now = Date.now()) {
+    return updateWorkspaceInState(state, workspaceId, { tabs }, now);
+  }
+  function addTabToWorkspace(state, workspaceId, tab, now = Date.now()) {
+    const workspace = workspaceById(state, workspaceId);
+    const key = normalizeComparableUrl(tab.url);
+    const tabs = [
+      tab,
+      ...workspace.tabs.filter((candidate) => normalizeComparableUrl(candidate.url) !== key)
+    ];
+    return updateWorkspaceInState(state, workspaceId, { tabs }, now);
+  }
+  function importWorkspaceState(current, payload, mode = "merge", now = Date.now(), idFactory = createId) {
+    const source = record(payload);
+    const incomingValue = source.state ?? payload;
+    const incomingRecord = record(incomingValue);
+    const incomingList = Array.isArray(incomingRecord.workspaces) ? incomingRecord.workspaces : Array.isArray(incomingValue) ? incomingValue : [];
+    if (!incomingList.length) throw new Error("Import file does not contain any workspaces.");
+    const base = mode === "replace" ? emptyState() : current;
+    const existingIds = new Set(base.workspaces.map((workspace) => workspace.id));
+    const imported = incomingList.map((value) => {
+      const workspace = normalizeWorkspace(value, now, idFactory);
+      if (existingIds.has(workspace.id)) workspace.id = idFactory("workspace");
+      workspace.updatedAt = now;
+      existingIds.add(workspace.id);
+      return workspace;
+    });
+    return {
+      version: WORKSPACE_STATE_VERSION,
+      activeWorkspaceId: imported[0]?.id ?? base.activeWorkspaceId,
+      workspaces: [...imported, ...base.workspaces]
+    };
+  }
+
+  // src/core/tabs.ts
+  function savedTabFromChrome(tab, now = Date.now(), idFactory = createId) {
+    const url = tab.url?.trim();
+    if (!url) return null;
+    return {
+      id: idFactory("tab"),
+      url,
+      title: tab.title?.trim() || url,
+      favIconUrl: tab.favIconUrl || "",
+      pinned: Boolean(tab.pinned),
+      group: "General",
+      savedAt: now
+    };
+  }
+  function savedTabsFromChrome(tabs, now = Date.now(), idFactory = createId) {
+    return tabs.map((tab) => savedTabFromChrome(tab, now, idFactory)).filter((tab) => Boolean(tab));
+  }
+  function matchingOpenTabIds(savedTabs, openTabs) {
+    const savedUrls = new Set(savedTabs.map((tab) => normalizeComparableUrl(tab.url)));
+    return openTabs.filter((tab) => typeof tab.id === "number" && tab.url && savedUrls.has(normalizeComparableUrl(tab.url))).map((tab) => tab.id);
+  }
+
+  // src/core/background-lifecycle.ts
+  async function initializeBackground(ensureState, sidePanel) {
+    await ensureState();
+    await sidePanel?.setPanelBehavior?.({ openPanelOnActionClick: false });
+  }
+  async function runBackgroundTask(context, task, report) {
+    try {
+      await task();
+    } catch (error) {
+      report(context, error);
+    }
+  }
+
+  // src/entries/background.ts
+  var STORAGE_KEY = "workspaceForgeState";
+  var GROUP_COLOR_MAP = {
+    grey: "grey",
+    blue: "blue",
+    cyan: "cyan",
+    green: "green",
+    yellow: "yellow",
+    orange: "orange",
+    red: "red",
+    pink: "pink",
+    purple: "purple"
+  };
+  async function readState() {
+    const stored = await chrome.storage.local.get(STORAGE_KEY);
+    const normalized = normalizeState(stored[STORAGE_KEY] ?? emptyState());
+    await chrome.storage.local.set({ [STORAGE_KEY]: normalized });
+    return normalized;
+  }
+  async function writeState(state) {
+    const normalized = normalizeState(state);
+    await chrome.storage.local.set({ [STORAGE_KEY]: normalized });
+    return normalized;
+  }
+  async function lastFocusedWindow() {
+    const browserWindow = await chrome.windows.getLastFocused({
+      populate: true,
+      windowTypes: ["normal"]
+    });
+    if (typeof browserWindow.id !== "number") throw new Error("No normal Chrome window is available.");
+    return browserWindow;
+  }
+  async function openSidePanel(windowId) {
+    const sidePanel = chrome.sidePanel;
+    if (!sidePanel?.open) {
+      throw new Error("Workspace Forge requires Chrome 116 or newer for Side Panel support.");
+    }
+    const targetId = windowId ?? (await lastFocusedWindow()).id;
+    if (typeof targetId !== "number") throw new Error("No Chrome window is available.");
+    await sidePanel.open({ windowId: targetId });
+    return { windowId: targetId };
+  }
+  async function saveCurrentWindow(payload = {}) {
+    const browserWindow = await lastFocusedWindow();
+    const tabs = savedTabsFromChrome(browserWindow.tabs || []);
+    const current = await readState();
+    const created = createWorkspaceInState(current, {
+      name: payload.name?.trim() || `Workspace ${current.workspaces.length + 1}`,
+      color: payload.color || "blue",
+      tabs
+    });
+    return writeState(created.state);
+  }
+  async function replaceFromCurrentWindow(workspaceId) {
+    const browserWindow = await lastFocusedWindow();
+    const tabs = savedTabsFromChrome(browserWindow.tabs || []);
+    return writeState(replaceWorkspaceTabs(await readState(), workspaceId, tabs));
+  }
+  async function addCurrentTab(workspaceId) {
+    const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    if (!tab) throw new Error("No active tab is available.");
+    const saved = savedTabFromChrome(tab);
+    if (!saved) throw new Error("The active tab does not expose a URL.");
+    return writeState(addTabToWorkspace(await readState(), workspaceId, saved));
+  }
+  async function restoreWorkspace(workspaceId) {
+    const workspace = workspaceById(await readState(), workspaceId);
+    if (!workspace.tabs.length) throw new Error("This workspace has no saved tabs.");
+    const created = await chrome.windows.create({ url: workspace.tabs.map((tab) => tab.url) });
+    if (typeof created.id !== "number") throw new Error("Chrome did not return the restored window.");
+    const createdTabs = created.tabs?.length ? created.tabs : await chrome.tabs.query({ windowId: created.id });
+    const unpinnedIds = [];
+    for (const [index, tab] of createdTabs.entries()) {
+      if (typeof tab.id !== "number") continue;
+      const saved = workspace.tabs[index];
+      if (saved?.pinned) {
+        await chrome.tabs.update(tab.id, { pinned: true });
+      } else {
+        unpinnedIds.push(tab.id);
+      }
+    }
+    if (unpinnedIds.length) {
+      const groupId = await chrome.tabs.group({
+        tabIds: unpinnedIds,
+        createProperties: { windowId: created.id }
+      });
+      await chrome.tabGroups.update(groupId, {
+        title: workspace.name.slice(0, 40),
+        color: GROUP_COLOR_MAP[workspace.color],
+        collapsed: false
+      });
+    }
+    return { windowId: created.id, tabCount: createdTabs.length };
+  }
+  async function closeWorkspaceTabs(workspaceId) {
+    const workspace = workspaceById(await readState(), workspaceId);
+    const openTabs = await chrome.tabs.query({});
+    const ids = matchingOpenTabIds(workspace.tabs, openTabs);
+    if (ids.length) await chrome.tabs.remove(ids);
+    return { closed: ids.length };
+  }
+  async function handleMessage(message) {
+    switch (message.type) {
+      case "GET_STATE":
+      case "EXPORT_STATE":
+        return readState();
+      case "OPEN_SIDE_PANEL":
+        return openSidePanel(message.windowId);
+      case "CREATE_WORKSPACE": {
+        const created = createWorkspaceInState(await readState(), message.payload || {});
+        return writeState(created.state);
+      }
+      case "UPDATE_WORKSPACE":
+        return writeState(updateWorkspaceInState(
+          await readState(),
+          message.workspaceId,
+          message.patch
+        ));
+      case "DELETE_WORKSPACE":
+        return writeState(deleteWorkspaceFromState(await readState(), message.workspaceId));
+      case "SAVE_CURRENT_WINDOW":
+        return saveCurrentWindow(message.payload);
+      case "REPLACE_TABS_FROM_WINDOW":
+        return replaceFromCurrentWindow(message.workspaceId);
+      case "ADD_CURRENT_TAB":
+        return addCurrentTab(message.workspaceId);
+      case "OPEN_WORKSPACE":
+        return restoreWorkspace(message.workspaceId);
+      case "CLOSE_WORKSPACE_TABS":
+        return closeWorkspaceTabs(message.workspaceId);
+      case "SET_ACTIVE_WORKSPACE":
+        return writeState(setActiveWorkspace(await readState(), message.workspaceId));
+      case "IMPORT_STATE":
+        return writeState(importWorkspaceState(
+          await readState(),
+          message.payload,
+          message.mode || "merge"
+        ));
+      default: {
+        const exhaustive = message;
+        throw new Error(`Unsupported message: ${JSON.stringify(exhaustive)}`);
+      }
+    }
+  }
+  function reportBackgroundError(context, error) {
+    console.error(`Workspace Forge ${context} failed:`, error);
+  }
+  function initializeWorker() {
+    const sidePanel = chrome.sidePanel;
+    return initializeBackground(readState, sidePanel);
+  }
+  chrome.runtime.onInstalled.addListener(() => {
+    void runBackgroundTask("installation", initializeWorker, reportBackgroundError);
+  });
+  chrome.runtime.onStartup.addListener(() => {
+    void runBackgroundTask("startup", initializeWorker, reportBackgroundError);
+  });
+  chrome.commands.onCommand.addListener((command) => {
+    if (command === "open-workspace-forge") {
+      void runBackgroundTask("keyboard shortcut", () => openSidePanel(), reportBackgroundError);
+    }
+  });
+  chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    void handleMessage(message).then((result) => sendResponse({ ok: true, result })).catch((error) => {
+      console.warn("Workspace Forge request failed:", error);
+      sendResponse({
+        ok: false,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    });
+    return true;
+  });
+})();
