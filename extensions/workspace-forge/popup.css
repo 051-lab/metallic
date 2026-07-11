@@ -1,0 +1,26 @@
+:root {
+  color-scheme: dark;
+  --bg: #090c10;
+  --panel: #141a22;
+  --line: #2d3744;
+  --text: #edf3fa;
+  --muted: #8f9cab;
+  --signal: #79b5ff;
+}
+* { box-sizing: border-box; }
+html, body { width: 360px; margin: 0; background: var(--bg); color: var(--text); font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif; }
+.popup-shell { display: grid; gap: 13px; padding: 18px; background: radial-gradient(circle at 100% 0, rgba(121,181,255,.14), transparent 220px); }
+header { display: flex; align-items: center; gap: 11px; }
+.mark { display: grid; width: 37px; height: 37px; place-items: center; border: 1px solid #4b5a6d; border-radius: 50%; color: var(--signal); background: #111720; font-size: 20px; }
+h1 { margin: 0; font-size: 17px; }
+header p, .summary, .status { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
+label { display: grid; gap: 6px; color: #b7c1cd; font-size: 11px; }
+input, button { width: 100%; min-height: 40px; border: 1px solid var(--line); border-radius: 9px; color: var(--text); background: var(--panel); font: inherit; }
+input { padding: 0 11px; outline: 0; }
+input:focus { border-color: var(--signal); box-shadow: 0 0 0 3px rgba(121,181,255,.12); }
+button { padding: 9px 12px; cursor: pointer; }
+button:hover { border-color: #536277; background: #1b2430; }
+button.primary { border-color: #4f82bd; background: #1d4978; }
+button:disabled { opacity: .55; cursor: wait; }
+.status { min-height: 16px; }
+.status.is-error { color: #ff9c9c; }
