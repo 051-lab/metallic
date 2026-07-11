@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Metallic Workspace Forge",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Save, restore, group, and manage project-based Chrome workspaces.",
   "permissions": [
     "tabs",
@@ -27,5 +27,6 @@
       },
       "description": "Open Metallic Workspace Forge"
     }
-  }
+  },
+  "minimum_chrome_version": "116"
 }
