@@ -2,6 +2,13 @@
 
 Metallic Workspace Forge is a Manifest V3 Chrome extension for turning scattered browser windows into named, reusable project workspaces.
 
+## v0.2.1 Runtime Fix
+
+- Handles service-worker installation, startup, and shortcut failures without unhandled promise rejections.
+- Opens the Side Panel directly from the popup to preserve the user gesture.
+- Requires Chrome 116 or newer, where `chrome.sidePanel.open()` is available.
+- Uses readable production bundles so Chrome error locations no longer expand to one minified line.
+
 ## Features
 
 - Save the current Chrome window as a workspace.
@@ -23,6 +30,7 @@ The modernization pass separates pure state and tab-normalization logic from Chr
 ```text
 src/
 ├── core/
+│   ├── background-lifecycle.ts
 │   ├── models.ts
 │   ├── state.ts
 │   ├── tabs.ts
