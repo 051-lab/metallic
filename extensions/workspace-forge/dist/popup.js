@@ -1,1 +1,65 @@
-"use strict";(()=>{function n(e){let t=document.getElementById(e);if(!t)throw new Error(`Missing popup element: ${e}`);return t}var i=n("workspaceName"),o=n("saveWindow"),r=n("openPanel"),p=n("workspaceSummary"),d=n("status");async function c(e){let t=await chrome.runtime.sendMessage(e);if(!t.ok)throw new Error(t.error||"Workspace Forge request failed.");return t.result}function s(e,t=!1){d.textContent=e,d.classList.toggle("is-error",t)}async function u(){let e=await c({type:"GET_STATE"}),t=e.workspaces.reduce((a,l)=>a+l.tabs.length,0);p.textContent=`${e.workspaces.length} workspace${e.workspaces.length===1?"":"s"} \xB7 ${t} saved tab${t===1?"":"s"}`}o.addEventListener("click",async()=>{o.disabled=!0,s("Saving current window\u2026");try{let e=await c({type:"SAVE_CURRENT_WINDOW",payload:{name:i.value.trim()||void 0,color:"blue"}}),t=e.workspaces.find(a=>a.id===e.activeWorkspaceId);s(`Saved ${t?.tabs.length||0} tabs to ${t?.name||"workspace"}.`),i.value="",await u()}catch(e){s(e instanceof Error?e.message:"Unable to save this window.",!0)}finally{o.disabled=!1}});r.addEventListener("click",async()=>{r.disabled=!0;try{let e=await chrome.windows.getCurrent();await c({type:"OPEN_SIDE_PANEL",windowId:e.id}),window.close()}catch(e){s(e instanceof Error?e.message:"Unable to open the side panel.",!0),r.disabled=!1}});u().catch(e=>{s(e instanceof Error?e.message:"Unable to read workspaces.",!0)});})();
+"use strict";
+(() => {
+  // src/entries/popup.ts
+  function required(id) {
+    const element = document.getElementById(id);
+    if (!element) throw new Error(`Missing popup element: ${id}`);
+    return element;
+  }
+  var nameInput = required("workspaceName");
+  var saveButton = required("saveWindow");
+  var openButton = required("openPanel");
+  var summary = required("workspaceSummary");
+  var status = required("status");
+  async function send(message) {
+    const response = await chrome.runtime.sendMessage(message);
+    if (!response.ok) throw new Error(response.error || "Workspace Forge request failed.");
+    return response.result;
+  }
+  function showStatus(message, error = false) {
+    status.textContent = message;
+    status.classList.toggle("is-error", error);
+  }
+  async function refreshSummary() {
+    const state = await send({ type: "GET_STATE" });
+    const tabCount = state.workspaces.reduce((total, workspace) => total + workspace.tabs.length, 0);
+    summary.textContent = `${state.workspaces.length} workspace${state.workspaces.length === 1 ? "" : "s"} \xB7 ${tabCount} saved tab${tabCount === 1 ? "" : "s"}`;
+  }
+  saveButton.addEventListener("click", async () => {
+    saveButton.disabled = true;
+    showStatus("Saving current window\u2026");
+    try {
+      const state = await send({
+        type: "SAVE_CURRENT_WINDOW",
+        payload: { name: nameInput.value.trim() || void 0, color: "blue" }
+      });
+      const workspace = state.workspaces.find((candidate) => candidate.id === state.activeWorkspaceId);
+      showStatus(`Saved ${workspace?.tabs.length || 0} tabs to ${workspace?.name || "workspace"}.`);
+      nameInput.value = "";
+      await refreshSummary();
+    } catch (error) {
+      showStatus(error instanceof Error ? error.message : "Unable to save this window.", true);
+    } finally {
+      saveButton.disabled = false;
+    }
+  });
+  openButton.addEventListener("click", async () => {
+    openButton.disabled = true;
+    try {
+      const sidePanel = chrome.sidePanel;
+      if (!sidePanel?.open) {
+        throw new Error("Workspace Forge requires Chrome 116 or newer for Side Panel support.");
+      }
+      const current = await chrome.windows.getCurrent();
+      if (typeof current.id !== "number") throw new Error("No Chrome window is available.");
+      await sidePanel.open({ windowId: current.id });
+      window.close();
+    } catch (error) {
+      showStatus(error instanceof Error ? error.message : "Unable to open the side panel.", true);
+      openButton.disabled = false;
+    }
+  });
+  void refreshSummary().catch((error) => {
+    showStatus(error instanceof Error ? error.message : "Unable to read workspaces.", true);
+  });
+})();
