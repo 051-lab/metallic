@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Metallic Workspace Forge</title>
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="rail">
+      <header class="brand">
+        <span class="mark">◇</span>
+        <div><h1>Workspace Forge</h1><p>Project command center</p></div>
+      </header>
+
+      <section class="create-panel">
+        <button id="createBlank" class="primary" type="button">New Blank Workspace</button>
+        <div class="template-row">
+          <select id="templateSelect" aria-label="Workspace template"></select>
+          <button id="createTemplate" type="button">Create</button>
+        </div>
+      </section>
+
+      <nav id="workspaceList" class="workspace-list" aria-label="Workspaces"></nav>
+
+      <footer class="rail-footer">
+        <button id="importState" type="button">Import</button>
+        <button id="exportState" type="button">Export</button>
+        <input id="importFile" type="file" accept="application/json" hidden>
+      </footer>
+    </aside>
+
+    <main class="content">
+      <section id="emptyState" class="empty-state">
+        <span>◇</span>
+        <h2>No workspace selected</h2>
+        <p>Create a blank workspace or start from a workflow template.</p>
+      </section>
+
+      <section id="editor" hidden>
+        <div class="editor-header">
+          <div>
+            <p class="eyebrow">Active workspace</p>
+            <input id="workspaceTitle" class="title-input" type="text" maxlength="80">
+          </div>
+          <select id="workspaceColor" aria-label="Workspace color">
+            <option value="grey">Silver</option>
+            <option value="blue">Blue</option>
+            <option value="cyan">Cyan</option>
+            <option value="green">Green</option>
+            <option value="yellow">Yellow</option>
+            <option value="orange">Orange</option>
+            <option value="red">Red</option>
+            <option value="pink">Pink</option>
+            <option value="purple">Purple</option>
+          </select>
+        </div>
+
+        <div class="action-grid">
+          <button id="openWorkspace" class="primary" type="button">Open Workspace</button>
+          <button id="addCurrentTab" type="button">Add Active Tab</button>
+          <button id="replaceTabs" type="button">Replace Tabs from Window</button>
+          <button id="closeWorkspaceTabs" type="button">Close Matching Tabs</button>
+        </div>
+
+        <section class="panel">
+          <label>Next action<input id="workspaceNextAction" type="text" placeholder="The next concrete move"></label>
+          <label>Notes<textarea id="workspaceNotes" rows="5" placeholder="Context, decisions, references, and findings"></textarea></label>
+          <button id="saveDetails" class="primary compact" type="button">Save Details</button>
+        </section>
+
+        <section class="panel">
+          <div class="section-heading"><div><p class="eyebrow">Session</p><h2>Saved tabs</h2></div></div>
+          <div id="savedTabs" class="stack"></div>
+        </section>
+
+        <section class="panel">
+          <div class="section-heading"><div><p class="eyebrow">Momentum</p><h2>Tasks</h2></div></div>
+          <div class="task-entry"><input id="newTask" type="text" placeholder="Add a task"><button id="addTask" type="button">Add</button></div>
+          <div id="taskList" class="stack"></div>
+        </section>
+
+        <button id="deleteWorkspace" class="danger" type="button">Delete Workspace</button>
+      </section>
+      <p id="status" class="status" aria-live="polite"></p>
+    </main>
+  </div>
+  <script src="dist/sidepanel.js"></script>
+</body>
+</html>
