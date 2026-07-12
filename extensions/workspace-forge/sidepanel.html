@@ -24,6 +24,25 @@
 
       <nav id="workspaceList" class="workspace-list" aria-label="Workspaces"></nav>
 
+      <section class="sync-panel" aria-labelledby="syncTitle">
+        <div class="sync-heading">
+          <div><p class="eyebrow">Portability</p><h2 id="syncTitle">Chrome Sync</h2></div>
+          <span id="syncBadge" class="sync-badge sync-disabled">Off</span>
+        </div>
+        <p id="syncSummary" class="sync-summary">Reading sync status…</p>
+        <div class="sync-actions">
+          <button id="syncToggle" type="button">Enable</button>
+          <button id="syncNow" type="button">Sync Now</button>
+        </div>
+        <div id="syncConflict" class="sync-conflict" hidden>
+          <strong>Choose a conflict resolution</strong>
+          <button id="syncUseLocal" type="button">Use This Browser</button>
+          <button id="syncUseRemote" type="button">Use Synced Copy</button>
+          <button id="syncMerge" class="primary" type="button">Merge Workspaces</button>
+        </div>
+        <button id="syncDelete" class="text-button" type="button">Remove Cloud Copy</button>
+      </section>
+
       <footer class="rail-footer">
         <button id="importState" type="button">Import</button>
         <button id="exportState" type="button">Export</button>
