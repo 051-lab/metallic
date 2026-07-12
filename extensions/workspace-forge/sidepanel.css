@@ -19,8 +19,9 @@ button, input, textarea, select { font: inherit; }
 button, input, textarea, select { border: 1px solid var(--line); border-radius: 9px; color: var(--text); background: #111720; }
 button { min-height: 36px; padding: 7px 10px; cursor: pointer; }
 button:hover { border-color: var(--line-bright); background: var(--panel-raised); }
+button:disabled { cursor: not-allowed; opacity: .48; }
 button.primary { border-color: #4f82bd; background: #1d4978; }
-button.compact { width: fit-content; }
+button.compact { width: fit-content; min-height: 30px; }
 button.danger { border-color: #5e363b; color: var(--danger); background: #211316; }
 input, textarea, select { width: 100%; padding: 9px 10px; outline: 0; }
 textarea { resize: vertical; }
@@ -46,6 +47,16 @@ h1, h2, p { margin: 0; }
 .workspace-card-copy strong { font-size: 11px; }
 .workspace-card-copy small { margin-top: 4px; color: var(--muted); font: 8px/1.2 var(--mono); }
 .rail-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; padding: 10px; border-top: 1px solid var(--line); }
+.sync-panel { display: grid; grid-column: 1 / -1; gap: 7px; padding: 9px; border: 1px solid var(--line); border-radius: 10px; background: #0a0f15; }
+.sync-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.sync-heading strong, .sync-heading small { display: block; }
+.sync-heading strong { font-size: 10px; }
+.sync-heading small, .sync-panel > small, .sync-panel p { color: var(--muted); font: 8px/1.35 var(--mono); }
+.sync-panel p { min-height: 22px; }
+.sync-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.sync-actions button { min-height: 30px; padding: 4px 7px; font-size: 9px; }
+.sync-panel.is-error { border-color: #6a3b42; }
+.sync-panel.is-error #syncState, .sync-panel.is-error #syncMessage { color: var(--danger); }
 .content { position: relative; overflow-y: auto; padding: 18px; background: radial-gradient(circle at 90% -5%, rgba(121,181,255,.12), transparent 300px); }
 .empty-state { display: grid; min-height: 70vh; place-content: center; justify-items: center; color: var(--muted); text-align: center; }
 .empty-state > span { color: var(--signal); font-size: 34px; }
