@@ -1,0 +1,22 @@
+{
+  "name": "workspace-forge",
+  "version": "0.2.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "watch": "node scripts/build.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "check": "npm run typecheck && npm test && npm run build",
+    "package": "npm run check && node scripts/package.mjs"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/chrome": "^0.0.322",
+    "@types/node": "^22.10.0",
+    "esbuild": "^0.25.5",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}

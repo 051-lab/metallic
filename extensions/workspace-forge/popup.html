@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Workspace Forge</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main class="popup-shell">
+    <header>
+      <span class="mark">◇</span>
+      <div>
+        <h1>Workspace Forge</h1>
+        <p>Metallic project workspaces</p>
+      </div>
+    </header>
+    <p id="workspaceSummary" class="summary">Loading workspaces…</p>
+    <label>
+      Workspace name
+      <input id="workspaceName" type="text" maxlength="80" placeholder="Current project">
+    </label>
+    <button id="saveWindow" class="primary" type="button">Save Current Window</button>
+    <button id="openPanel" type="button">Open Workspace Manager</button>
+    <p id="status" class="status" aria-live="polite"></p>
+  </main>
+  <script src="dist/popup.js"></script>
+</body>
+</html>

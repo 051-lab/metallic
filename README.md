@@ -30,7 +30,8 @@ metallic/
 │   ├── freedium/
 │   ├── localhost-dashboard/
 │   ├── tab-finder/
-│   └── tube-utilities/
+│   ├── tube-utilities/
+│   └── workspace-forge/
 ├── scripts/           # Workspace-level validation utilities
 ├── shared/            # Reusable utilities and components
 ├── templates/         # Starter templates for new extensions
@@ -121,6 +122,18 @@ Load unpacked after building from:
 extensions/tube-utilities
 ```
 
+### Metallic Workspace Forge
+
+Turns browser windows into named project workspaces with saved tabs, notes,
+next actions, tasks, workflow templates, import/export, and grouped restore into
+new Chrome windows.
+
+Load unpacked from:
+
+```text
+extensions/workspace-forge
+```
+
 ---
 
 ## 🚀 Getting Started
@@ -146,8 +159,8 @@ npm run validate
 
 The validator discovers extension directories, parses their Manifest V3 source,
 and checks that files referenced by each manifest exist. Pull requests also run
-the individual `npm run check` pipeline for every extension package that defines
-one in the repository workflow matrix.
+the individual type-check, build, and test pipeline for each extension package
+listed in the repository workflow matrix.
 
 ---
 

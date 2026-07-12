@@ -32,6 +32,7 @@ jobs:
           - frame-meter
           - tab-finder
           - tube-utilities
+          - workspace-forge
     defaults:
       run:
         working-directory: extensions/${{ matrix.extension }}
