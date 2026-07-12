@@ -99,7 +99,11 @@ function checksumBytes(bytes: Uint8Array): string {
 }
 
 export function workspaceStateChecksum(state: WorkspaceForgeState): string {
-  return checksumBytes(new TextEncoder().encode(JSON.stringify(normalizeState(state))));
+  const normalized = normalizeState(state);
+  return checksumBytes(new TextEncoder().encode(JSON.stringify({
+    ...normalized,
+    activeWorkspaceId: null
+  })));
 }
 
 function bytesToBase64(bytes: Uint8Array): string {
