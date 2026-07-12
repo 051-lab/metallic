@@ -1,57 +1,40 @@
 # Metallic Tab Finder
 
-Metallic Tab Finder is a keyboard-first Manifest V3 extension for finding and switching to any open tab across every normal Chrome window.
+Metallic Tab Finder is a keyboard-first Manifest V3 Chrome extension for locating, aliasing, and switching to tabs across every normal Chrome window.
 
-It is intentionally smaller than a session manager or workspace dashboard. The extension solves one focused problem: when many tabs are spread across several windows, locate the right tab immediately without clicking through each window.
+## v0.3.0 — Tab Aliases
 
-## v0.2.1 Fix
+Tab Aliases let you give an open tab a name that is easier to recognize and search.
 
-- Fixed keyboard and click activation across browser windows. Tab Finder activates the selected tab before focusing its window, preventing Chrome from closing the popup before the activation request is sent.
+- Select a tab and press `F2`, or use the **Rename** button.
+- Aliases rank above native page titles in search.
+- The original page title remains visible as secondary metadata.
+- `Shift+F2` removes the selected tab's alias.
+- Aliases are stored in `chrome.storage.session`, so they clear when Chrome restarts or the extension reloads.
+- When the selected tab is the tab that invoked Tab Finder, the extension also updates and locks `document.title` for the current page session.
+- Background tabs and protected Chrome pages can still receive a searchable **alias-only** label inside Tab Finder without requesting access to every website.
 
-## Features
+This first alias release intentionally does not include persistent URL rules or all-sites host permissions.
 
-- Search open tab titles, domains, and URLs.
-- Fuzzy multi-token matching with domain-aware ranking.
-- Rank idle results using Chrome's recent tab activity while keeping active and pinned tabs prominent.
-- View tabs grouped by Chrome window or website domain.
-- Filter the list to tabs whose URLs are open more than once.
-- Keep the popup current when tabs or windows are created, closed, moved, updated, or activated.
-- Switch to a result with one click or the keyboard.
-- Show favicons and active, pinned, audible, sleeping, and duplicate states.
-- Count open windows, matching tabs, and duplicate copies.
-- Remember the selected grouping mode with `chrome.storage.sync`.
-- Open the popup with the extension action or the suggested `Alt+Shift+K` shortcut.
+## Existing features
 
-## Load Unpacked
-
-1. Open Chrome and go to `chrome://extensions`.
-2. Enable **Developer mode**.
-3. Click **Load unpacked**.
-4. Select:
-
-```text
-extensions/tab-finder
-```
-
-The committed `dist/popup.js` bundle makes the branch directly loadable without a local build.
-
-## Keyboard Controls
-
-- Type to search.
-- `Arrow Up` / `Arrow Down`: move through visible results.
-- `Page Up` / `Page Down`: move eight results at a time.
-- `Home` / `End`: jump to the first or last result.
-- `Enter`: activate the selected tab, then focus its browser window.
-- `Alt+D`: toggle the duplicate-only filter.
-- `Escape`: clear the query, then clear the duplicate filter, then close the popup.
-- `/`: return focus to the search box.
+- Fuzzy multi-token search across aliases, titles, domains, and URLs.
+- Recent-tab-aware ranking.
+- Window and domain grouping.
+- Duplicate-only filtering.
+- Live tab and window refresh.
+- Cross-window activation that activates the tab before focusing its window.
+- Keyboard navigation with arrows, Page Up/Down, Home/End, Enter, Escape, `/`, `F2`, `Shift+F2`, and `Alt+D`.
+- Favicons and active, pinned, audible, sleeping, duplicate, and alias indicators.
 
 ## Permissions
 
-- `tabs`: read tab titles, URLs, state, recent-access timestamps, and window membership, then activate the selected tab.
-- `storage`: remember the window/domain grouping preference.
+- `tabs`: enumerate open tabs and read tab metadata.
+- `storage`: store grouping preference and session aliases.
+- `activeTab`: temporarily access the tab that invoked Tab Finder.
+- `scripting`: update `document.title` only when temporary tab access is available.
 
-No host permissions or page content scripts are requested.
+No persistent host permissions or content scripts are requested.
 
 ## Development
 
@@ -60,31 +43,20 @@ npm install
 npm run check
 ```
 
-Available scripts:
+Load unpacked from:
 
-- `npm run build`: bundle TypeScript sources into `dist/`.
-- `npm run watch`: rebuild during development.
-- `npm run typecheck`: run strict TypeScript validation.
-- `npm test`: run search, recency, duplicate-detection, and activation-order unit tests.
-- `npm run package`: validate and stage a runtime package under `release/tab-finder`.
+```text
+extensions/tab-finder
+```
 
-## Test Plan
+## Manual alias test
 
-1. Open tabs across at least two Chrome windows.
-2. Load the extension and open its popup.
-3. Verify every normal-window tab appears with its title and domain.
-4. Search by exact title, partial title, domain, and fuzzy multi-token query.
-5. Switch grouping between Windows and Domains, close and reopen the popup, and verify the preference persists.
-6. Use arrows, Page Up/Down, Home/End, and Enter to navigate and switch tabs, including a tab in another browser window.
-7. Click a result in another browser window and verify the correct tab becomes active.
-8. Open the same URL more than once and verify indicators, counts, and the duplicate-only filter.
-9. Create, close, move, or activate tabs while the popup is open and verify the list refreshes without losing the selected tab when possible.
-10. Verify pinned, audible, and discarded tabs receive the expected state chips.
-11. With an empty query, verify recently accessed tabs appear ahead of older inactive tabs.
-
-## Next Roadmap
-
-- Add opt-in tab actions such as mute, pin, close, and move.
-- Add a confirmation-based action for closing redundant duplicate copies.
-- Support user-defined aliases for frequently used domains.
-- Explore integration points with Metallic Workspace Forge without merging the two extensions' responsibilities.
+1. Open Tab Finder from a normal `https://` page.
+2. Keep the active tab selected and press `F2`.
+3. Save an alias and confirm the Chrome tab title changes.
+4. Change the page title through navigation or a dynamic app and confirm the alias remains locked.
+5. Search for the alias.
+6. Press `Shift+F2` and confirm the latest native page title is restored.
+7. Alias a background tab and confirm it is marked **Alias only**.
+8. Switch to that tab, reopen Tab Finder, and confirm the alias is applied visibly.
+9. Confirm protected pages such as `chrome://extensions` fall back to alias-only behavior without crashing.
