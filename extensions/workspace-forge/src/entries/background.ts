@@ -28,7 +28,6 @@ import {
   SYNC_PREFERENCES_KEY,
   SYNC_QUOTA_BYTES,
   decodeWorkspaceSnapshot,
-  defaultSyncPreferences,
   encodeWorkspaceSnapshot,
   mergeWorkspaceStates,
   normalizeSyncManifest,
@@ -134,15 +133,25 @@ async function markDirtyAndPush(state: WorkspaceForgeState): Promise<void> {
   }
 }
 
-async function writeState(state: WorkspaceForgeState): Promise<WorkspaceForgeState> {
+async function writeLocalState(state: WorkspaceForgeState): Promise<WorkspaceForgeState> {
   const normalized = normalizeState(state);
   await chrome.storage.local.set({ [STORAGE_KEY]: normalized });
+  return normalized;
+}
+
+async function writeState(state: WorkspaceForgeState): Promise<WorkspaceForgeState> {
+  const normalized = await writeLocalState(state);
   await markDirtyAndPush(normalized);
   return normalized;
 }
 
 async function applyRemoteSnapshot(snapshot: RemoteSnapshot, preferencesValue?: WorkspaceSyncPreferences): Promise<WorkspaceForgeState> {
-  const normalized = normalizeState(snapshot.state);
+  const current = await readState();
+  const remote = normalizeState(snapshot.state);
+  const preservedActiveId = current.activeWorkspaceId && remote.workspaces.some((workspace) => workspace.id === current.activeWorkspaceId)
+    ? current.activeWorkspaceId
+    : remote.activeWorkspaceId;
+  const normalized = normalizeState({ ...remote, activeWorkspaceId: preservedActiveId });
   await chrome.storage.local.set({ [STORAGE_KEY]: normalized });
   const preferences = preferencesValue ?? await readSyncPreferences();
   await saveSyncPreferences({
@@ -403,7 +412,7 @@ async function handleMessage(message: WorkspaceRequest): Promise<unknown> {
     case "ADD_CURRENT_TAB": return addCurrentTab(message.workspaceId);
     case "OPEN_WORKSPACE": return restoreWorkspace(message.workspaceId);
     case "CLOSE_WORKSPACE_TABS": return closeWorkspaceTabs(message.workspaceId);
-    case "SET_ACTIVE_WORKSPACE": return writeState(setActiveWorkspace(await readState(), message.workspaceId));
+    case "SET_ACTIVE_WORKSPACE": return writeLocalState(setActiveWorkspace(await readState(), message.workspaceId));
     case "IMPORT_STATE": return writeState(importWorkspaceState(await readState(), message.payload, message.mode || "merge"));
     case "GET_SYNC_STATUS": return getSyncStatus();
     case "ENABLE_SYNC": return enableSync();
