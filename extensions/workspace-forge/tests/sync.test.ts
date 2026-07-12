@@ -15,24 +15,8 @@ function state(name: string, updatedAt = 10): WorkspaceForgeState {
     version: 3,
     activeWorkspaceId: "w1",
     workspaces: [{
-      id: "w1",
-      name,
-      color: "blue",
-      status: "active",
-      notes: "α notes",
-      nextAction: "Ship it",
-      createdAt: 1,
-      updatedAt,
-      tabs: [{
-        id: "t1",
-        url: "https://example.com",
-        title: "Example",
-        favIconUrl: "",
-        pinned: false,
-        group: "General",
-        savedAt: 1
-      }],
-      tasks: []
+      id: "w1", name, color: "blue", status: "active", notes: "α notes", nextAction: "Ship it",
+      createdAt: 1, updatedAt, tabs: [{ id: "t1", url: "https://example.com", title: "Example", favIconUrl: "", pinned: false, group: "General", savedAt: 1 }], tasks: []
     }]
   };
 }
@@ -85,6 +69,12 @@ describe("workspace sync preferences", () => {
   it("creates stable checksums for normalized state", () => {
     expect(workspaceStateChecksum(state("A"))).toBe(workspaceStateChecksum(state("A")));
     expect(workspaceStateChecksum(state("A"))).not.toBe(workspaceStateChecksum(state("B")));
+  });
+
+  it("does not treat device-local workspace selection as a sync change", () => {
+    const first = state("A");
+    const second = { ...first, activeWorkspaceId: null };
+    expect(workspaceStateChecksum(first)).toBe(workspaceStateChecksum(second));
   });
 
   it("creates disabled defaults", () => {
