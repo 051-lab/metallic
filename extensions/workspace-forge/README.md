@@ -2,12 +2,19 @@
 
 Metallic Workspace Forge is a Manifest V3 Chrome extension for turning scattered browser windows into named, reusable project workspaces.
 
-## v0.2.1 Runtime Fix
+## v0.2.2 Workspace Sync
 
-- Handles service-worker installation, startup, and shortcut failures without unhandled promise rejections.
-- Opens the Side Panel directly from the popup to preserve the user gesture.
-- Requires Chrome 116 or newer, where `chrome.sidePanel.open()` is available.
-- Uses readable production bundles so Chrome error locations no longer expand to one minified line.
+Workspace Sync is opt-in. Local storage remains the primary database. When enabled, Workspace Forge:
+
+- Pulls and merges an existing synced library before publishing local data.
+- Merges matching workspace IDs using the newest `updatedAt` timestamp.
+- Preserves independent workspaces created in different browsers.
+- Syncs deletion tombstones so removed workspaces do not immediately reappear.
+- Publishes later local edits automatically.
+- Provides manual **Pull** and **Push** controls.
+- Checks Chrome Sync's per-item and total quotas before writing.
+
+Chrome Sync works only when Chrome sync is enabled and the extension has the same extension ID in both installations. Different Chromium browsers, different sync ecosystems, or differently identified unpacked installs may not share data. JSON import/export remains the universal transfer and backup path.
 
 ## Features
 
@@ -21,11 +28,10 @@ Metallic Workspace Forge is a Manifest V3 Chrome extension for turning scattered
 - Preserve pinned-tab intent.
 - Close currently open tabs that match a workspace.
 - Import and export workspace JSON.
+- Optionally sync workspace data through Chrome Sync.
 - Manage everything from a persistent Chrome side panel.
 
 ## Architecture
-
-The modernization pass separates pure state and tab-normalization logic from Chrome API orchestration:
 
 ```text
 src/
@@ -33,6 +39,7 @@ src/
 │   ├── background-lifecycle.ts
 │   ├── models.ts
 │   ├── state.ts
+│   ├── sync.ts
 │   ├── tabs.ts
 │   └── templates.ts
 └── entries/
@@ -41,13 +48,13 @@ src/
     └── sidepanel.ts
 ```
 
-State is stored in `chrome.storage.local` under `workspaceForgeState` and normalized to schema version 3 whenever it is read or written.
+The full workspace database is stored in `chrome.storage.local`. Opt-in portable snapshots are chunked across `chrome.storage.sync` so each workspace can be validated against Chrome's per-item quota.
 
 ## Permissions
 
 - `tabs`: capture, open, pin, group, and close workspace tabs.
 - `tabGroups`: label restored tabs as a workspace.
-- `storage`: persist workspace data locally.
+- `storage`: persist local workspace data and optional Chrome Sync records.
 - `sidePanel`: provide persistent workspace management.
 
 No host permissions or content scripts are requested.
