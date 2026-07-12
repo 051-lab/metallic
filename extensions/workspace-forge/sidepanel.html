@@ -25,6 +25,18 @@
       <nav id="workspaceList" class="workspace-list" aria-label="Workspaces"></nav>
 
       <footer class="rail-footer">
+        <section class="sync-panel" aria-labelledby="syncHeading">
+          <div class="sync-heading">
+            <div><strong id="syncHeading">Workspace Sync</strong><small id="syncState">Local only</small></div>
+            <button id="toggleSync" class="compact" type="button">Enable</button>
+          </div>
+          <p id="syncMessage">Keep workspaces local, or opt in to Chrome Sync.</p>
+          <div class="sync-actions">
+            <button id="pullSync" type="button" disabled>Pull</button>
+            <button id="pushSync" type="button" disabled>Push</button>
+          </div>
+          <small id="syncUsage">0 KB used</small>
+        </section>
         <button id="importState" type="button">Import</button>
         <button id="exportState" type="button">Export</button>
         <input id="importFile" type="file" accept="application/json" hidden>

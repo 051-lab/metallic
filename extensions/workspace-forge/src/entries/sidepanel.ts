@@ -4,6 +4,7 @@ import type {
   WorkspaceForgeState,
   WorkspaceRequest,
   WorkspaceResponse,
+  WorkspaceSyncStatus,
   WorkspaceTask
 } from "../core/models";
 import { WORKSPACE_TEMPLATES, templateById } from "../core/templates";
@@ -27,10 +28,26 @@ const elements = {
   newTask: required<HTMLInputElement>("newTask"),
   status: required<HTMLElement>("status"),
   template: required<HTMLSelectElement>("templateSelect"),
-  importFile: required<HTMLInputElement>("importFile")
+  importFile: required<HTMLInputElement>("importFile"),
+  syncPanel: required<HTMLElement>("syncHeading").closest<HTMLElement>(".sync-panel")!,
+  syncState: required<HTMLElement>("syncState"),
+  syncMessage: required<HTMLElement>("syncMessage"),
+  syncUsage: required<HTMLElement>("syncUsage"),
+  toggleSync: required<HTMLButtonElement>("toggleSync"),
+  pullSync: required<HTMLButtonElement>("pullSync"),
+  pushSync: required<HTMLButtonElement>("pushSync")
 };
 
 let state: WorkspaceForgeState = { version: 3, activeWorkspaceId: null, workspaces: [] };
+let syncStatus: WorkspaceSyncStatus = {
+  enabled: false,
+  deviceId: "",
+  lastSyncedAt: null,
+  remoteUpdatedAt: null,
+  bytesInUse: 0,
+  state: "off",
+  message: "Sync is off. Workspaces remain local to this browser."
+};
 
 async function send<T>(message: WorkspaceRequest): Promise<T> {
   const response = await chrome.runtime.sendMessage(message) as WorkspaceResponse<T>;
@@ -53,6 +70,26 @@ function escapeText(value: string): string {
   return span.innerHTML;
 }
 
+function formatSyncTime(value: number | null): string {
+  if (!value) return "Never synced";
+  return `Last sync ${new Date(value).toLocaleString()}`;
+}
+
+function renderSyncStatus(): void {
+  const enabled = syncStatus.enabled;
+  elements.syncPanel.classList.toggle("is-error", syncStatus.state === "error");
+  elements.syncState.textContent = syncStatus.state === "error"
+    ? "Sync error"
+    : enabled ? "Sync enabled" : "Local only";
+  elements.syncMessage.textContent = syncStatus.state === "error"
+    ? syncStatus.message
+    : enabled ? `${syncStatus.message} ${formatSyncTime(syncStatus.lastSyncedAt)}.` : syncStatus.message;
+  elements.syncUsage.textContent = `${(syncStatus.bytesInUse / 1024).toFixed(1)} KB of Chrome Sync used`;
+  elements.toggleSync.textContent = enabled ? "Disable" : "Enable";
+  elements.pullSync.disabled = !enabled;
+  elements.pushSync.disabled = !enabled;
+}
+
 function renderWorkspaceList(): void {
   elements.workspaceList.replaceChildren();
   for (const workspace of state.workspaces) {
@@ -69,10 +106,7 @@ function renderWorkspaceList(): void {
       </span>
     `;
     button.addEventListener("click", async () => {
-      state = await send<WorkspaceForgeState>({
-        type: "SET_ACTIVE_WORKSPACE",
-        workspaceId: workspace.id
-      });
+      state = await send<WorkspaceForgeState>({ type: "SET_ACTIVE_WORKSPACE", workspaceId: workspace.id });
       render();
     });
     elements.workspaceList.append(button);
@@ -93,7 +127,6 @@ function renderTabs(workspace: Workspace): void {
     elements.tabs.innerHTML = '<p class="muted empty-copy">No tabs saved yet.</p>';
     return;
   }
-
   for (const tab of workspace.tabs) {
     const row = document.createElement("div");
     row.className = "saved-row";
@@ -127,7 +160,6 @@ function renderTasks(workspace: Workspace): void {
     elements.tasks.innerHTML = '<p class="muted empty-copy">No tasks yet.</p>';
     return;
   }
-
   for (const task of workspace.tasks) {
     const row = document.createElement("div");
     row.className = "task-row";
@@ -158,7 +190,6 @@ function renderEditor(): void {
   elements.empty.hidden = Boolean(workspace);
   elements.editor.hidden = !workspace;
   if (!workspace) return;
-
   elements.title.value = workspace.name;
   elements.color.value = workspace.color;
   elements.notes.value = workspace.notes;
@@ -170,10 +201,14 @@ function renderEditor(): void {
 function render(): void {
   renderWorkspaceList();
   renderEditor();
+  renderSyncStatus();
 }
 
 async function load(): Promise<void> {
-  state = await send<WorkspaceForgeState>({ type: "GET_STATE" });
+  [state, syncStatus] = await Promise.all([
+    send<WorkspaceForgeState>({ type: "GET_STATE" }),
+    send<WorkspaceSyncStatus>({ type: "GET_SYNC_STATUS" })
+  ]);
   render();
 }
 
@@ -181,11 +216,8 @@ async function updateWorkspace(patch: Partial<Workspace>): Promise<void> {
   const workspace = activeWorkspace();
   if (!workspace) return;
   try {
-    state = await send<WorkspaceForgeState>({
-      type: "UPDATE_WORKSPACE",
-      workspaceId: workspace.id,
-      patch
-    });
+    state = await send<WorkspaceForgeState>({ type: "UPDATE_WORKSPACE", workspaceId: workspace.id, patch });
+    syncStatus = await send<WorkspaceSyncStatus>({ type: "GET_SYNC_STATUS" });
     render();
     showStatus("Workspace saved.");
   } catch (error) {
@@ -203,10 +235,7 @@ function populateTemplates(): void {
 }
 
 required<HTMLButtonElement>("createBlank").addEventListener("click", async () => {
-  state = await send<WorkspaceForgeState>({
-    type: "CREATE_WORKSPACE",
-    payload: { name: "New Workspace", color: "grey" }
-  });
+  state = await send<WorkspaceForgeState>({ type: "CREATE_WORKSPACE", payload: { name: "New Workspace", color: "grey" } });
   render();
   showStatus("Created a new workspace.");
 });
@@ -223,13 +252,7 @@ required<HTMLButtonElement>("createTemplate").addEventListener("click", async ()
   }));
   state = await send<WorkspaceForgeState>({
     type: "CREATE_WORKSPACE",
-    payload: {
-      name: template.name,
-      color: template.color,
-      notes: template.notes,
-      nextAction: template.nextAction,
-      tasks
-    }
+    payload: { name: template.name, color: template.color, notes: template.notes, nextAction: template.nextAction, tasks }
   });
   render();
   showStatus(`Created ${template.name}.`);
@@ -269,10 +292,7 @@ required<HTMLButtonElement>("addCurrentTab").addEventListener("click", async () 
 required<HTMLButtonElement>("replaceTabs").addEventListener("click", async () => {
   const workspace = activeWorkspace();
   if (!workspace) return;
-  state = await send<WorkspaceForgeState>({
-    type: "REPLACE_TABS_FROM_WINDOW",
-    workspaceId: workspace.id
-  });
+  state = await send<WorkspaceForgeState>({ type: "REPLACE_TABS_FROM_WINDOW", workspaceId: workspace.id });
   render();
   showStatus("Replaced saved tabs from the current window.");
 });
@@ -280,30 +300,21 @@ required<HTMLButtonElement>("replaceTabs").addEventListener("click", async () =>
 required<HTMLButtonElement>("openWorkspace").addEventListener("click", async () => {
   const workspace = activeWorkspace();
   if (!workspace) return;
-  const result = await send<{ tabCount: number }>({
-    type: "OPEN_WORKSPACE",
-    workspaceId: workspace.id
-  });
+  const result = await send<{ tabCount: number }>({ type: "OPEN_WORKSPACE", workspaceId: workspace.id });
   showStatus(`Opened ${result.tabCount} tabs in a new window.`);
 });
 
 required<HTMLButtonElement>("closeWorkspaceTabs").addEventListener("click", async () => {
   const workspace = activeWorkspace();
   if (!workspace) return;
-  const result = await send<{ closed: number }>({
-    type: "CLOSE_WORKSPACE_TABS",
-    workspaceId: workspace.id
-  });
+  const result = await send<{ closed: number }>({ type: "CLOSE_WORKSPACE_TABS", workspaceId: workspace.id });
   showStatus(`Closed ${result.closed} matching tab${result.closed === 1 ? "" : "s"}.`);
 });
 
 required<HTMLButtonElement>("deleteWorkspace").addEventListener("click", async () => {
   const workspace = activeWorkspace();
   if (!workspace || !confirm(`Delete “${workspace.name}”?`)) return;
-  state = await send<WorkspaceForgeState>({
-    type: "DELETE_WORKSPACE",
-    workspaceId: workspace.id
-  });
+  state = await send<WorkspaceForgeState>({ type: "DELETE_WORKSPACE", workspaceId: workspace.id });
   render();
   showStatus("Workspace deleted.");
 });
@@ -324,8 +335,7 @@ elements.importFile.addEventListener("change", async () => {
   const file = elements.importFile.files?.[0];
   if (!file) return;
   try {
-    const payload = JSON.parse(await file.text()) as unknown;
-    state = await send<WorkspaceForgeState>({ type: "IMPORT_STATE", payload, mode: "merge" });
+    state = await send<WorkspaceForgeState>({ type: "IMPORT_STATE", payload: JSON.parse(await file.text()) as unknown, mode: "merge" });
     render();
     showStatus("Imported workspace data.");
   } catch (error) {
@@ -333,6 +343,50 @@ elements.importFile.addEventListener("change", async () => {
   } finally {
     elements.importFile.value = "";
   }
+});
+
+elements.toggleSync.addEventListener("click", async () => {
+  elements.toggleSync.disabled = true;
+  try {
+    syncStatus = await send<WorkspaceSyncStatus>({ type: "SET_SYNC_ENABLED", enabled: !syncStatus.enabled });
+    state = await send<WorkspaceForgeState>({ type: "GET_STATE" });
+    render();
+    showStatus(syncStatus.enabled ? "Workspace Sync enabled." : "Workspace Sync disabled.");
+  } catch (error) {
+    showStatus(error instanceof Error ? error.message : "Unable to change sync settings.", true);
+  } finally {
+    elements.toggleSync.disabled = false;
+  }
+});
+
+elements.pullSync.addEventListener("click", async () => {
+  try {
+    syncStatus = await send<WorkspaceSyncStatus>({ type: "PULL_SYNC" });
+    state = await send<WorkspaceForgeState>({ type: "GET_STATE" });
+    render();
+    showStatus("Pulled and merged synced workspaces.");
+  } catch (error) {
+    showStatus(error instanceof Error ? error.message : "Unable to pull synced workspaces.", true);
+  }
+});
+
+elements.pushSync.addEventListener("click", async () => {
+  try {
+    syncStatus = await send<WorkspaceSyncStatus>({ type: "PUSH_SYNC" });
+    renderSyncStatus();
+    showStatus("Published local workspaces to Chrome Sync.");
+  } catch (error) {
+    syncStatus = await send<WorkspaceSyncStatus>({ type: "GET_SYNC_STATUS" });
+    renderSyncStatus();
+    showStatus(error instanceof Error ? error.message : "Unable to push workspaces.", true);
+  }
+});
+
+chrome.storage.onChanged.addListener((_changes, areaName) => {
+  if (areaName !== "sync") return;
+  window.setTimeout(() => {
+    void load().catch((error: unknown) => showStatus(error instanceof Error ? error.message : "Unable to refresh sync state.", true));
+  }, 150);
 });
 
 populateTemplates();
