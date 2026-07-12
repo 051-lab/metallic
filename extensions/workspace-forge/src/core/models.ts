@@ -47,6 +47,16 @@ export interface WorkspaceForgeState {
   workspaces: Workspace[];
 }
 
+export interface WorkspaceSyncStatus {
+  enabled: boolean;
+  deviceId: string;
+  lastSyncedAt: number | null;
+  remoteUpdatedAt: number | null;
+  bytesInUse: number;
+  state: "off" | "ready" | "error";
+  message: string;
+}
+
 export interface WorkspaceTemplate {
   id: string;
   name: string;
@@ -70,7 +80,11 @@ export type WorkspaceRequest =
   | { type: "CLOSE_WORKSPACE_TABS"; workspaceId: string }
   | { type: "SET_ACTIVE_WORKSPACE"; workspaceId: string | null }
   | { type: "IMPORT_STATE"; payload: unknown; mode?: "merge" | "replace" }
-  | { type: "EXPORT_STATE" };
+  | { type: "EXPORT_STATE" }
+  | { type: "GET_SYNC_STATUS" }
+  | { type: "SET_SYNC_ENABLED"; enabled: boolean }
+  | { type: "PUSH_SYNC" }
+  | { type: "PULL_SYNC" };
 
 export interface WorkspaceResponse<T = unknown> {
   ok: boolean;
