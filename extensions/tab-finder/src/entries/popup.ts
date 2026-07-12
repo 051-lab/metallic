@@ -1,5 +1,17 @@
 import { activateThenFocus } from "../core/tab-activation";
 import {
+  aliasForTab,
+  aliasMapsEqual,
+  createAliasRecord,
+  normalizeAliasMap,
+  pruneAliases,
+  TAB_ALIAS_MAX_LENGTH,
+  TAB_ALIAS_STORAGE_KEY,
+  type TabAliasMap,
+  withAlias,
+  withoutAlias
+} from "../core/tab-alias";
+import {
   domainForUrl,
   duplicateCounts,
   normalizedUrlForDuplicate,
@@ -7,6 +19,7 @@ import {
   type TabCandidate,
   type TabSearchResult
 } from "../core/tab-search";
+import { installTitleAlias, resetTitleAlias } from "../core/title-alias";
 
 type GroupMode = "window" | "domain";
 
@@ -19,6 +32,9 @@ interface PopupState {
   selectedIndex: number;
   windowLabels: Map<number, string>;
   duplicateCounts: Map<string, number>;
+  aliases: TabAliasMap;
+  invokedTabId?: number;
+  aliasDialogTabId?: number;
 }
 
 function requiredElement<T extends HTMLElement>(id: string): T {
@@ -37,8 +53,18 @@ const elements = {
   groupDomain: requiredElement<HTMLButtonElement>("groupDomain"),
   duplicateOnly: requiredElement<HTMLButtonElement>("duplicateOnly"),
   duplicateCount: requiredElement<HTMLElement>("duplicateCount"),
-  refresh: requiredElement<HTMLButtonElement>("refreshButton")
+  rename: requiredElement<HTMLButtonElement>("renameButton"),
+  refresh: requiredElement<HTMLButtonElement>("refreshButton"),
+  aliasDialog: requiredElement<HTMLDialogElement>("aliasDialog"),
+  aliasForm: requiredElement<HTMLFormElement>("aliasForm"),
+  aliasInput: requiredElement<HTMLInputElement>("aliasInput"),
+  aliasNativeTitle: requiredElement<HTMLElement>("aliasNativeTitle"),
+  aliasCapability: requiredElement<HTMLElement>("aliasCapability"),
+  aliasCancel: requiredElement<HTMLButtonElement>("aliasCancel"),
+  aliasReset: requiredElement<HTMLButtonElement>("aliasReset")
 };
+
+elements.aliasInput.maxLength = TAB_ALIAS_MAX_LENGTH;
 
 const state: PopupState = {
   tabs: [],
@@ -48,11 +74,17 @@ const state: PopupState = {
   duplicatesOnly: false,
   selectedIndex: 0,
   windowLabels: new Map(),
-  duplicateCounts: new Map()
+  duplicateCounts: new Map(),
+  aliases: {}
 };
 
 let refreshTimer: number | undefined;
+let feedbackTimer: number | undefined;
 let loadGeneration = 0;
+
+function selectedTab(): TabCandidate | undefined {
+  return state.displayResults[state.selectedIndex]?.tab;
+}
 
 function groupLabel(result: TabSearchResult): string {
   return state.groupMode === "domain"
@@ -97,15 +129,26 @@ function createTabRow(result: TabSearchResult, resultIndex: number): HTMLButtonE
   button.dataset.resultIndex = String(resultIndex);
   button.setAttribute("role", "option");
   button.setAttribute("aria-selected", String(resultIndex === state.selectedIndex));
-  button.title = tab.url;
+  button.title = tab.alias
+    ? `${tab.alias}\nOriginal: ${tab.title}\n${tab.url}`
+    : tab.url;
 
   const copy = document.createElement("span");
   copy.className = "tab-copy";
+
   const title = document.createElement("span");
   title.className = "tab-title";
-  title.textContent = tab.title;
+  title.textContent = tab.alias || tab.title;
+
   const metadata = document.createElement("span");
   metadata.className = "tab-meta";
+  if (tab.alias) {
+    const nativeTitle = document.createElement("span");
+    nativeTitle.className = "tab-native-title";
+    nativeTitle.textContent = tab.title;
+    metadata.append(nativeTitle);
+  }
+
   const domain = document.createElement("span");
   domain.className = "tab-domain";
   domain.textContent = tab.domain;
@@ -114,6 +157,15 @@ function createTabRow(result: TabSearchResult, resultIndex: number): HTMLButtonE
 
   const statuses = document.createElement("span");
   statuses.className = "status-stack";
+  if (tab.alias) {
+    statuses.append(createStatusChip(
+      tab.aliasApplied ? "Alias" : "Alias only",
+      tab.aliasApplied ? "alias" : "alias-only",
+      tab.aliasApplied
+        ? "The browser-visible page title is locked to this alias."
+        : "This alias is searchable in Tab Finder. Switch to the tab and reopen Tab Finder to apply it visibly."
+    ));
+  }
   if (tab.active) statuses.append(createStatusChip("Active", "active"));
   if (tab.pinned) statuses.append(createStatusChip("Pin", "", "Pinned tab"));
   if (tab.audible) statuses.append(createStatusChip("Audio", "audio", "Playing audio"));
@@ -146,6 +198,7 @@ function renderSelection(scrollIntoView: boolean): void {
     }
   });
 
+  elements.rename.disabled = !selectedTab();
   if (activeId) elements.search.setAttribute("aria-activedescendant", activeId);
   else elements.search.removeAttribute("aria-activedescendant");
 }
@@ -175,9 +228,21 @@ function renderDuplicateControl(): void {
 function renderSummary(): void {
   const windowCount = state.windowLabels.size;
   const duplicateCount = duplicateExcessCount();
+  const aliasCount = state.tabs.filter((tab) => Boolean(tab.alias)).length;
   const filterLabel = state.duplicatesOnly ? " · duplicates only" : "";
   elements.windowBadge.textContent = `${windowCount} window${windowCount === 1 ? "" : "s"}`;
-  elements.summary.textContent = `${state.results.length} of ${state.tabs.length} tabs · ${windowCount} window${windowCount === 1 ? "" : "s"} · ${duplicateCount} duplicate${duplicateCount === 1 ? "" : "s"}${filterLabel}`;
+  elements.summary.textContent = `${state.results.length} of ${state.tabs.length} tabs · ${aliasCount} alias${aliasCount === 1 ? "" : "es"} · ${duplicateCount} duplicate${duplicateCount === 1 ? "" : "s"}${filterLabel}`;
+}
+
+function showFeedback(message: string, error = false): void {
+  if (feedbackTimer !== undefined) window.clearTimeout(feedbackTimer);
+  elements.summary.textContent = message;
+  elements.summary.classList.toggle("is-error", error);
+  feedbackTimer = window.setTimeout(() => {
+    elements.summary.classList.remove("is-error");
+    renderSummary();
+    feedbackTimer = undefined;
+  }, 2800);
 }
 
 function renderEmptyState(): void {
@@ -193,7 +258,7 @@ function renderEmptyState(): void {
     copy.textContent = "No equivalent URLs are open more than once.";
   } else {
     heading.textContent = "No matching tabs";
-    copy.textContent = "Try a title, domain, or a shorter fuzzy search.";
+    copy.textContent = "Try an alias, title, domain, or shorter fuzzy search.";
   }
 }
 
@@ -279,7 +344,7 @@ async function activateTab(tab: TabCandidate): Promise<void> {
     );
     window.close();
   } catch (error) {
-    elements.summary.textContent = error instanceof Error ? error.message : "The tab could not be activated.";
+    showFeedback(error instanceof Error ? error.message : "The tab could not be activated.", true);
   }
 }
 
@@ -314,6 +379,126 @@ function toggleDuplicatesOnly(): void {
   elements.search.focus({ preventScroll: true });
 }
 
+async function persistAliases(): Promise<void> {
+  await chrome.storage.session.set({ [TAB_ALIAS_STORAGE_KEY]: state.aliases });
+}
+
+async function loadAliases(): Promise<void> {
+  const stored = await chrome.storage.session.get(TAB_ALIAS_STORAGE_KEY);
+  state.aliases = normalizeAliasMap(stored[TAB_ALIAS_STORAGE_KEY]);
+}
+
+function canApplyVisibleAlias(tab: TabCandidate): boolean {
+  return tab.id === state.invokedTabId && tab.active;
+}
+
+async function applyVisibleAlias(tab: TabCandidate, alias: string): Promise<boolean> {
+  if (!canApplyVisibleAlias(tab)) return false;
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: installTitleAlias,
+      args: [alias]
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function resetVisibleAlias(tab: TabCandidate): Promise<boolean> {
+  if (!canApplyVisibleAlias(tab)) return false;
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: resetTitleAlias
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function openAliasDialog(tab = selectedTab()): void {
+  if (!tab) return;
+  state.aliasDialogTabId = tab.id;
+  const record = aliasForTab(state.aliases, tab.id);
+  elements.aliasInput.value = record?.alias || "";
+  elements.aliasNativeTitle.textContent = tab.title;
+  elements.aliasReset.hidden = !record;
+  elements.aliasCapability.textContent = canApplyVisibleAlias(tab)
+    ? "This tab is active. Saving will rename the browser tab and lock the page title for this session."
+    : "This tab will receive a searchable Tab Finder alias. Switch to it and reopen Tab Finder to apply the alias visibly.";
+  elements.aliasDialog.showModal();
+  window.setTimeout(() => {
+    elements.aliasInput.focus();
+    elements.aliasInput.select();
+  }, 0);
+}
+
+function closeAliasDialog(): void {
+  state.aliasDialogTabId = undefined;
+  elements.aliasDialog.close();
+  elements.search.focus({ preventScroll: true });
+}
+
+function aliasDialogTab(): TabCandidate | undefined {
+  return state.tabs.find((tab) => tab.id === state.aliasDialogTabId);
+}
+
+async function saveAliasFromDialog(): Promise<void> {
+  const tab = aliasDialogTab();
+  if (!tab) return;
+
+  try {
+    const existing = aliasForTab(state.aliases, tab.id);
+    const record = createAliasRecord(tab.id, tab.title, elements.aliasInput.value, Date.now(), existing);
+    state.aliases = withAlias(state.aliases, record);
+    await persistAliases();
+    const applied = await applyVisibleAlias(tab, record.alias);
+
+    const candidate = state.tabs.find((item) => item.id === tab.id);
+    if (candidate) {
+      candidate.alias = record.alias;
+      candidate.aliasApplied = applied;
+    }
+
+    closeAliasDialog();
+    render(tab.id);
+    showFeedback(applied
+      ? `Renamed the tab to “${record.alias}”.`
+      : `Saved “${record.alias}” as a Tab Finder alias.`, false);
+  } catch (error) {
+    elements.aliasCapability.textContent = error instanceof Error ? error.message : "Unable to save this alias.";
+    elements.aliasCapability.classList.add("is-error");
+  }
+}
+
+async function resetAliasForTab(tab: TabCandidate): Promise<void> {
+  const record = aliasForTab(state.aliases, tab.id);
+  if (!record) return;
+
+  state.aliases = withoutAlias(state.aliases, tab.id);
+  await persistAliases();
+  const restored = await resetVisibleAlias(tab);
+  const candidate = state.tabs.find((item) => item.id === tab.id);
+  if (candidate) {
+    candidate.alias = undefined;
+    candidate.aliasApplied = false;
+    if (restored) candidate.title = record.originalTitle;
+  }
+
+  if (elements.aliasDialog.open) closeAliasDialog();
+  render(tab.id);
+  showFeedback(restored ? "Restored the page title." : "Removed the Tab Finder alias.");
+  if (restored) scheduleReload();
+}
+
+async function resetAliasFromDialog(): Promise<void> {
+  const tab = aliasDialogTab();
+  if (tab) await resetAliasForTab(tab);
+}
+
 async function loadTabs(preserveSelection = false, quiet = false): Promise<void> {
   const generation = ++loadGeneration;
   const selectedTabId = preserveSelection
@@ -340,11 +525,18 @@ async function loadTabs(preserveSelection = false, quiet = false): Promise<void>
         if (typeof tab.id !== "number" || typeof tab.windowId !== "number") continue;
         const url = tab.url || "";
         const domain = domainForUrl(url);
+        const chromeTitle = tab.title?.trim() || domain || "Untitled tab";
+        const alias = aliasForTab(state.aliases, tab.id);
+        const aliasApplied = Boolean(alias && chromeTitle === alias.alias);
+        const nativeTitle = aliasApplied && alias ? alias.originalTitle : chromeTitle;
+
         tabs.push({
           id: tab.id,
           windowId: tab.windowId,
           index: tab.index,
-          title: tab.title?.trim() || domain || "Untitled tab",
+          title: nativeTitle,
+          alias: alias?.alias,
+          aliasApplied,
           url,
           domain,
           favIconUrl: tab.favIconUrl || undefined,
@@ -355,6 +547,12 @@ async function loadTabs(preserveSelection = false, quiet = false): Promise<void>
           lastAccessed: tab.lastAccessed
         });
       }
+    }
+
+    const pruned = pruneAliases(state.aliases, tabs.map((tab) => tab.id));
+    if (!aliasMapsEqual(pruned, state.aliases)) {
+      state.aliases = pruned;
+      await persistAliases();
     }
 
     state.tabs = tabs;
@@ -429,8 +627,8 @@ function bindEvents(): void {
       jumpSelection(state.displayResults.length - 1);
     } else if (event.key === "Enter") {
       event.preventDefault();
-      const selected = state.displayResults[state.selectedIndex];
-      if (selected) void activateTab(selected.tab);
+      const selected = selectedTab();
+      if (selected) void activateTab(selected);
     } else if (event.key === "Escape") {
       event.preventDefault();
       if (elements.search.value) {
@@ -448,7 +646,14 @@ function bindEvents(): void {
   });
 
   document.addEventListener("keydown", (event) => {
-    if (event.altKey && event.key.toLowerCase() === "d") {
+    if (elements.aliasDialog.open) return;
+    if (event.key === "F2") {
+      event.preventDefault();
+      const tab = selectedTab();
+      if (!tab) return;
+      if (event.shiftKey) void resetAliasForTab(tab);
+      else openAliasDialog(tab);
+    } else if (event.altKey && event.key.toLowerCase() === "d") {
       event.preventDefault();
       toggleDuplicatesOnly();
     } else if (event.key === "/" && document.activeElement !== elements.search) {
@@ -460,19 +665,48 @@ function bindEvents(): void {
   elements.groupWindow.addEventListener("click", () => void setGroupMode("window"));
   elements.groupDomain.addEventListener("click", () => void setGroupMode("domain"));
   elements.duplicateOnly.addEventListener("click", toggleDuplicatesOnly);
+  elements.rename.addEventListener("click", () => openAliasDialog());
   elements.refresh.addEventListener("click", () => void loadTabs(true));
+
+  elements.aliasForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    elements.aliasCapability.classList.remove("is-error");
+    void saveAliasFromDialog();
+  });
+  elements.aliasCancel.addEventListener("click", closeAliasDialog);
+  elements.aliasReset.addEventListener("click", () => void resetAliasFromDialog());
+  elements.aliasDialog.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    closeAliasDialog();
+  });
 }
 
 async function start(): Promise<void> {
   bindEvents();
   bindChromeEvents();
+
+  const [invokedTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  state.invokedTabId = typeof invokedTab?.id === "number" ? invokedTab.id : undefined;
+
   const stored = await chrome.storage.sync.get({ groupMode: "window" });
   state.groupMode = stored.groupMode === "domain" ? "domain" : "window";
   elements.groupWindow.classList.toggle("is-active", state.groupMode === "window");
   elements.groupDomain.classList.toggle("is-active", state.groupMode === "domain");
   elements.groupWindow.setAttribute("aria-pressed", String(state.groupMode === "window"));
   elements.groupDomain.setAttribute("aria-pressed", String(state.groupMode === "domain"));
+
+  await loadAliases();
   await loadTabs();
+
+  const invocationTab = state.tabs.find((tab) => tab.id === state.invokedTabId);
+  if (invocationTab?.alias && !invocationTab.aliasApplied) {
+    const applied = await applyVisibleAlias(invocationTab, invocationTab.alias);
+    if (applied) {
+      invocationTab.aliasApplied = true;
+      render(invocationTab.id);
+    }
+  }
+
   elements.search.focus();
 }
 
