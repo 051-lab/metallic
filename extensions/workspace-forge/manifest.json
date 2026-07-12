@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
   "name": "Metallic Workspace Forge",
-  "version": "0.2.1",
-  "description": "Save, restore, group, and manage project-based Chrome workspaces.",
+  "version": "0.3.0",
+  "description": "Save, restore, group, manage, and sync project-based Chrome workspaces.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4d6ix62uzZcmcERBAAclzmUmw0PwuA8yFaK+O+xiNYEdXvIQdERsv2ZBBuoW3xWpzqCrlGGYTpOApG9vxfz4nSJGRbBxI3o37cu167KSNsQ+KQdjAf14J6xhKyLRe5sidAzSZjKyiL+s3kqfNCA0v9YakXH4sEMEnG3c97xmLFFgRAVR2Y754JpTrA3fXQnMEw4f0C0+d9OeOleqIpLJixeicmo5iT9HOTOFQm8gffhCn6JzdowLkmk7+qWHSIKvyXxEE7LYjB2pRQ+/CLQZYzWYY48uouEGvAezftVOXJS+W6jye81Id26Vrx+UCQpMyMbmYkD32u9WIrffhaC42wIDAQAB",
   "permissions": [
     "tabs",
     "tabGroups",
