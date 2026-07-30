@@ -21,7 +21,7 @@
 
     <label class="search-box" for="searchInput">
       <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg>
-      <input id="searchInput" type="search" autocomplete="off" spellcheck="false" placeholder="Search titles, domains, or URLs…" aria-controls="results" aria-autocomplete="list">
+      <input id="searchInput" type="search" autocomplete="off" spellcheck="false" placeholder="Search aliases, titles, domains, or URLs…" aria-controls="results" aria-autocomplete="list">
       <kbd>/</kbd>
     </label>
 
@@ -33,6 +33,10 @@
       <div class="toolbar-actions">
         <button class="filter-button" id="duplicateOnly" type="button" aria-pressed="false">
           Duplicates <span id="duplicateCount">0</span>
+        </button>
+        <button class="rename-button" id="renameButton" type="button" title="Rename selected tab (F2)">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m4 20 4.2-1 10.7-10.7a2.1 2.1 0 0 0-3-3L5.2 16 4 20Z"/><path d="m14.5 6.7 3 3"/></svg>
+          Rename
         </button>
         <button class="icon-button" id="refreshButton" type="button" title="Refresh open tabs" aria-label="Refresh open tabs">
           <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7"/></svg>
@@ -47,16 +51,50 @@
     <div class="empty-state" id="emptyState" hidden>
       <span aria-hidden="true">◇</span>
       <strong>No matching tabs</strong>
-      <p>Try a title, domain, or a shorter fuzzy search.</p>
+      <p>Try an alias, title, domain, or a shorter fuzzy search.</p>
     </div>
 
     <footer class="shortcut-bar" aria-label="Keyboard shortcuts">
       <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
       <span><kbd>Enter</kbd> switch</span>
-      <span><kbd>Alt</kbd>+<kbd>D</kbd> duplicates</span>
+      <span><kbd>F2</kbd> rename</span>
+      <span><kbd>Shift</kbd>+<kbd>F2</kbd> reset</span>
       <span><kbd>Esc</kbd> clear</span>
     </footer>
   </div>
+
+  <dialog class="alias-dialog" id="aliasDialog" aria-labelledby="aliasDialogTitle">
+    <form id="aliasForm">
+      <div class="dialog-heading">
+        <span class="dialog-mark" aria-hidden="true">Aa</span>
+        <div>
+          <h2 id="aliasDialogTitle">Tab alias</h2>
+          <p>Give this tab a name that is easier to recognize.</p>
+        </div>
+      </div>
+
+      <div class="native-title-card">
+        <span>Original page title</span>
+        <strong id="aliasNativeTitle">—</strong>
+      </div>
+
+      <label class="alias-field" for="aliasInput">
+        <span>Custom alias</span>
+        <input id="aliasInput" type="text" autocomplete="off" spellcheck="false" placeholder="Example: Auralis architecture" required>
+        <small>Up to 80 characters. Aliases are cleared when Chrome restarts.</small>
+      </label>
+
+      <p class="alias-capability" id="aliasCapability"></p>
+
+      <div class="dialog-actions">
+        <button class="danger-quiet" id="aliasReset" type="button">Reset alias</button>
+        <span class="dialog-spacer"></span>
+        <button class="button-secondary" id="aliasCancel" type="button">Cancel</button>
+        <button class="button-primary" type="submit">Save alias</button>
+      </div>
+    </form>
+  </dialog>
+
   <script src="dist/popup.js"></script>
 </body>
 </html>

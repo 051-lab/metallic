@@ -3,6 +3,8 @@ export interface TabCandidate {
   windowId: number;
   index: number;
   title: string;
+  alias?: string;
+  aliasApplied?: boolean;
   url: string;
   domain: string;
   favIconUrl?: string;
@@ -80,12 +82,13 @@ export function scoreTab(tab: TabCandidate, query: string, now = Date.now()): nu
   const recent = recencyBoost(tab.lastAccessed, now);
 
   if (!tokens.length) {
-    return (tab.active ? 40 : 0) + (tab.pinned ? 4 : 0) + recent;
+    return (tab.active ? 40 : 0) + (tab.pinned ? 4 : 0) + (tab.alias ? 3 : 0) + recent;
   }
 
   let score = 0;
   for (const token of tokens) {
     const tokenScore = Math.max(
+      scoreField(tab.alias || "", token, 42),
       scoreField(tab.title, token, 18),
       scoreField(tab.domain, token, 24),
       scoreField(tab.url, token, 4)
@@ -96,6 +99,7 @@ export function scoreTab(tab: TabCandidate, query: string, now = Date.now()): nu
 
   if (tab.active) score += 5;
   if (tab.pinned) score += 2;
+  if (tab.alias) score += 4;
   score += Math.min(6, Math.floor(recent / 4));
   return score;
 }

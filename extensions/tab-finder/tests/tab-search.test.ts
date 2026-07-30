@@ -16,6 +16,8 @@ const tabs: TabCandidate[] = [
     windowId: 10,
     index: 0,
     title: "Metallic repository · GitHub",
+    alias: "Extension command center",
+    aliasApplied: true,
     url: "https://github.com/051-lab/metallic",
     domain: "github.com",
     active: true,
@@ -74,8 +76,13 @@ describe("recencyBoost", () => {
 });
 
 describe("tab scoring", () => {
-  it("ranks exact domain matches strongly", () => {
-    expect(scoreTab(tabs[0]!, "github.com", NOW)).toBeGreaterThan(scoreTab(tabs[0]!, "metal", NOW));
+  it("ranks exact alias matches above exact domain matches", () => {
+    expect(scoreTab(tabs[0]!, "extension command center", NOW))
+      .toBeGreaterThan(scoreTab(tabs[0]!, "github.com", NOW));
+  });
+
+  it("keeps native titles searchable after an alias is assigned", () => {
+    expect(searchTabs(tabs, "metallic repository", NOW).map((result) => result.tab.id)).toEqual([1, 3]);
   });
 
   it("supports fuzzy subsequence matching", () => {
@@ -84,10 +91,6 @@ describe("tab scoring", () => {
 
   it("requires every query token to match", () => {
     expect(scoreTab(tabs[1]!, "chrome impossible-token", NOW)).toBe(Number.NEGATIVE_INFINITY);
-  });
-
-  it("returns ranked matches", () => {
-    expect(searchTabs(tabs, "metallic", NOW).map((result) => result.tab.id)).toEqual([1, 3]);
   });
 
   it("uses recent activity for an empty query", () => {
